@@ -81,13 +81,7 @@ const Landing = () => {
           size="lg"
           _hover={{ bg: "#1ed760" }}
           onClick={() => {
-            axios.get(`${BASE_URL}/login`, { withCredentials: true })
-              .then(res => {
-                window.location.href = res.request.responseURL;
-              })
-              .catch(err => {
-                console.error("🔴 Login redirect failed:", err);
-              });
+            window.location.href = `${BASE_URL}/login`;
           }}
         >
           LOGIN WITH SPOTIFY
@@ -104,13 +98,7 @@ const Landing = () => {
           size="md"
           _hover={{ bg: "#1ed760" }}
           onClick={() => {
-            axios.get(`${BASE_URL}/login`, { withCredentials: true })
-              .then(res => {
-                window.location.href = res.request.responseURL;
-              })
-              .catch(err => {
-                console.error("🔴 Login redirect failed:", err);
-              });
+            window.location.href = `${BASE_URL}/login`;
           }}
         >
           Try it Yourself
