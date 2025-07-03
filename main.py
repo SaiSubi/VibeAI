@@ -15,11 +15,11 @@ import json
 import base64
 from fastapi.middleware.cors import CORSMiddleware
 
+from utils.db import save_tokens_to_db, get_tokens_for_user
+from datetime import datetime, timedelta
+
 from utils.spotify import create_playlist, add_tracks_to_playlist
 
-# Placeholder for future user-based token storage
-def get_tokens_for_user(user_id):
-    raise NotImplementedError("User-based token storage not yet implemented.")
 
 
 # ──────────────────────────────────────────────
@@ -31,37 +31,42 @@ SPOTIFY_CLIENT_ID = os.getenv("SPOTIFY_CLIENT_ID")
 SPOTIFY_CLIENT_SECRET = os.getenv("SPOTIFY_CLIENT_SECRET")
 SPOTIFY_REDIRECT_URI = os.getenv("SPOTIFY_REDIRECT_URI")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-SPOTIFY_TEST_TOKEN = os.getenv("SPOTIFY_TEST_TOKEN")  # For quick testing
-
+DATABASE_URL = os.getenv("DATABASE_URL")
 # ──────────────────────────────────────────────
 # 🚀 FastAPI App Init
 # ──────────────────────────────────────────────
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=[
+        "http://localhost:5173",
+        "https://vibeai-frontend.netlify.app"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 def get_access_token(user_id=None):
-    if user_id:
-        # Placeholder: Replace with actual DB or session storage fetch
-        return get_tokens_for_user(user_id)["access_token"]
-    else:
-        with open("token.json", "r") as f:
-            token_data = json.load(f)
-        return token_data["access_token"]
+    if not user_id:
+        raise Exception("❌ No user_id provided to get_access_token()")
+
+    token_data = get_tokens_for_user(user_id)
+    expires_at = token_data.get("expires_at")
+
+    if not expires_at or datetime.strptime(expires_at, "%Y-%m-%dT%H:%M:%S.%f") < datetime.utcnow():
+        print("🔄 Access token expired. Refreshing...")
+        refresh_access_token(user_id)
+        token_data = get_tokens_for_user(user_id)  # Fetch updated tokens
+
+    return token_data["access_token"]
 
 def get_refresh_token(user_id=None):
     if user_id:
         # Placeholder: Replace with actual DB or session storage fetch
         return get_tokens_for_user(user_id)["refresh_token"]
     else:
-        with open("token.json", "r") as f:
-            token_data = json.load(f)
-        return token_data["refresh_token"]
+        raise Exception("❌ No user_id provided to get_refresh_token()")
 # ──────────────────────────────────────────────
 # 🌐 Basic Health Check Route
 # ──────────────────────────────────────────────
@@ -117,21 +122,53 @@ def callback(request: Request, code: str):
         return {"error": response.json()}
 
     token_data = response.json()
-    with open("token.json", "w") as f:
-        json.dump(token_data, f, indent=4)
+    # Get user's Spotify ID
+    access_token = token_data["access_token"]
+    headers = {"Authorization": f"Bearer {access_token}"}
+    user_response = requests.get("https://api.spotify.com/v1/me", headers=headers)
 
-    # Set refresh token in cookie
-    redirect = RedirectResponse(url="http://localhost:5173/home")  # Or wherever your frontend home is
-    redirect.set_cookie(key="refresh_token", value=token_data["refresh_token"], httponly=True)
+    if user_response.status_code != 200:
+        return {"error": "❌ Failed to retrieve user info from Spotify."}
+
+    user_id = user_response.json()["id"]
+
+    # Calculate token expiry
+    expires_in = token_data.get("expires_in", 3600)
+    expires_at = datetime.utcnow() + timedelta(seconds=expires_in)
+
+    # Save to DB
+    save_tokens_to_db(
+        user_id=user_id,
+        access_token=token_data["access_token"],
+        refresh_token=token_data["refresh_token"],
+        expires_at=expires_at
+    )
+
+    # Set refresh token and user_id in cookies with correct options for cross-origin/frontend access
+    redirect = RedirectResponse(url="https://vibeai-frontend.netlify.app/home")
+    redirect.set_cookie(
+        key="refresh_token",
+        value=token_data["refresh_token"],
+        httponly=True,
+        samesite="lax"
+    )
+    redirect.set_cookie(
+        key="user_id",
+        value=user_id,
+        httponly=False,
+        samesite="lax"
+    )
 
     return redirect
+
+from fastapi import Query
 
 # ──────────────────────────────────────────────
 # 🙋‍♂️ Get Current User's Spotify Profile (TEMP)
 # ──────────────────────────────────────────────
 @app.get("/me")
-def get_user_profile():
-    access_token = get_access_token()
+def get_user_profile(user_id: str = Query(...)):
+    access_token = get_access_token(user_id)
     headers = {
         "Authorization": f"Bearer {access_token}"
     }
@@ -165,8 +202,8 @@ def test_groq():
 
 
 @app.get("/create-test-playlist")
-def make_test_playlist():
-    access_token = get_access_token()
+def make_test_playlist(user_id: str = Query(...)):
+    access_token = get_access_token(user_id)
 
     headers = {
         "Authorization": f"Bearer {access_token}",
@@ -209,8 +246,8 @@ class TrackRequest(BaseModel):
     track_uris: List[str]
 
 @app.post("/add-tracks")
-def add_tracks_to_playlist_route(payload: TrackRequest):
-    access_token = get_access_token()
+def add_tracks_to_playlist_route(payload: TrackRequest, user_id: str = Query(...)):
+    access_token = get_access_token(user_id)
     return add_tracks_to_playlist(
         playlist_id=payload.playlist_id,
         track_uris=payload.track_uris,
@@ -219,8 +256,8 @@ def add_tracks_to_playlist_route(payload: TrackRequest):
 from utils.spotify import get_user_top_tracks
 
 @app.get("/top-tracks")
-def fetch_top_tracks():
-    access_token = get_access_token()
+def fetch_top_tracks(user_id: str = Query(...)):
+    access_token = get_access_token(user_id)
     top_tracks = get_user_top_tracks(access_token)
     return top_tracks
 
@@ -230,8 +267,8 @@ from fastapi import Query
 from utils.spotify import extract_song_info_from_liked_tracks
 
 @app.get("/liked-songs")
-def liked_songs():
-    access_token = get_access_token()
+def liked_songs(user_id: str = Query(...)):
+    access_token = get_access_token(user_id)
     headers = {
         "Authorization": f"Bearer {access_token}"
     }
@@ -255,12 +292,12 @@ class SongList(BaseModel):
     songs: list[str]
 
 @app.post("/groq-recommend")
-def recommend_songs_from_groq(payload: SongList):
-    song_list = payload.songs
+def recommend_songs_from_groq(payload: SongList, user_id: str = Query(...)):
+    access_token = get_access_token(user_id)
 
     prompt = f"""
     These are songs I love:
-    {chr(10).join(song_list)}
+    {chr(10).join(payload.songs)}
 
     Please suggest 5 more songs I might like, with a similar emotional or musical vibe. Include the song name and artist.
     """
@@ -284,9 +321,10 @@ import re
 
 @app.post("/groq-to-playlist")
 def groq_to_playlist(
-    groq_response: str = Body(...)
+    groq_response: str = Body(...),
+    user_id: str = Query(...)
 ):
-    access_token = get_access_token()
+    access_token = get_access_token(user_id)
 
     # Step 1: Extract (song, artist) pairs from Groq's response
     lines = groq_response.split("\n")
@@ -362,9 +400,11 @@ def groq_to_playlist(
 # ──────────────────────────────────────────────
 # 🔄 Refresh Spotify Access Token Route
 # ──────────────────────────────────────────────
+from fastapi import Query
+
 @app.post("/refresh_token")
-def refresh_access_token():
-    refresh_token = get_refresh_token()
+def refresh_access_token(user_id: str = Query(...)):
+    refresh_token = get_refresh_token(user_id)
     client_id = os.getenv("SPOTIFY_CLIENT_ID")
     client_secret = os.getenv("SPOTIFY_CLIENT_SECRET")
 
@@ -387,14 +427,17 @@ def refresh_access_token():
         return {"error": "❌ Failed to refresh token."}
 
     new_token_data = response.json()
-    with open("token.json", "r") as f:
-        current_token_data = json.load(f)
+    new_access_token = new_token_data["access_token"]
+    expires_in = new_token_data.get("expires_in", 3600)
+    expires_at = datetime.utcnow() + timedelta(seconds=expires_in)
 
-    # Update only access token
-    current_token_data["access_token"] = new_token_data["access_token"]
-
-    with open("token.json", "w") as f:
-        json.dump(current_token_data, f, indent=4)
+    # Update token in DB
+    save_tokens_to_db(
+        user_id=user_id,
+        access_token=new_access_token,
+        refresh_token=refresh_token,
+        expires_at=expires_at
+    )
 
     return {"message": "✅ Access token refreshed."}
 
@@ -404,16 +447,26 @@ def refresh_access_token():
 # ──────────────────────────────────────────────
 @app.get("/check_refresh_token")
 def check_refresh_token(request: Request):
-    refresh_token = request.cookies.get("refresh_token")
-    if not refresh_token:
+    user_id = request.cookies.get("user_id")
+    if not user_id:
+        print("❌ No user_id cookie found.")
         return {"valid": False}
-    return {"valid": True}
+    
+    try:
+        tokens = get_tokens_for_user(user_id)
+        if not tokens or "refresh_token" not in tokens:
+            print("❌ No token found in DB for user:", user_id)
+            return {"valid": False}
+        return {"valid": True}
+    except Exception as e:
+        print("❌ Error checking refresh token:", e)
+        return {"valid": False}
 
 from fastapi import Form
 
 @app.post("/groq-recommend-vibe")
-def recommend_vibe_based_music(vibe_prompt: str = Form(...)):
-    access_token = get_access_token()
+def recommend_vibe_based_music(vibe_prompt: str = Form(...), user_id: str = Query(...)):
+    access_token = get_access_token(user_id)
     
     # Step 1: Get top tracks
     top_tracks = get_user_top_tracks(access_token)

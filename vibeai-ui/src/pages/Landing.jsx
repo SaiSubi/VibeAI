@@ -19,7 +19,25 @@ const Landing = () => {
         console.log("🟢 Response from /check_refresh_token:", JSON.stringify(response.data));
 
         if (response.data.valid) {
-          console.log("✅ Valid refresh token found. Redirecting /home...");
+          console.log("✅ Valid refresh token found. Refreshing access token...");
+
+          const userId = document.cookie
+            .split("; ")
+            .find((row) => row.startsWith("user_id="))
+            ?.split("=")[1];
+
+          if (!userId) {
+            console.warn("⚠️ user_id cookie not found. Cannot refresh token.");
+            return;
+          }
+
+          await axios.post(
+            `http://localhost:8000/refresh_token?user_id=${userId}`,
+            {},
+            { withCredentials: true }
+          );
+
+          console.log("✅ Access token refreshed. Redirecting /home...");
           navigate("/home");
         } else {
           console.log("❌ Invalid or missing token. Staying on landing page.");

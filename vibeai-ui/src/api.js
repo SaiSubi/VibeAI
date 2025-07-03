@@ -1,6 +1,13 @@
 import axios from "axios";
 
-const BASE_URL = "http://localhost:8000"; // Update this if your backend runs elsewhere
+const getUserIdFromCookie = () => {
+  const match = document.cookie
+    .split("; ")
+    .find((row) => row.startsWith("user_id="));
+  return match ? match.split("=")[1] : null;
+};
+
+const BASE_URL = "https://vibeai-backend.onrender.com"; // Updated to live backend
 
 export const getHealth = async () => {
   try {
@@ -14,11 +21,14 @@ export const getHealth = async () => {
 
 export const recommendVibe = async (prompt) => {
   try {
+    const userId = getUserIdFromCookie();
+    if (!userId) throw new Error("Missing user ID");
+
     const formData = new FormData();
     formData.append("vibe_prompt", prompt);
 
     const response = await axios.post(
-      `${BASE_URL}/groq-recommend-vibe`,
+      `${BASE_URL}/groq-recommend-vibe?user_id=${userId}`,
       formData,
       {
         withCredentials: true,
@@ -33,11 +43,14 @@ export const recommendVibe = async (prompt) => {
 
 export const createPlaylistFromGroq = async (recommendationText) => {
   try {
+    const userId = getUserIdFromCookie();
+    if (!userId) throw new Error("Missing user ID");
+
     const formData = new FormData();
     formData.append("recommendation_text", recommendationText);
 
     const response = await axios.post(
-      `${BASE_URL}/groq-to-playlist`,
+      `${BASE_URL}/groq-to-playlist?user_id=${userId}`,
       formData,
       {
         withCredentials: true,

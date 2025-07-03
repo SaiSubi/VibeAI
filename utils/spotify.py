@@ -3,20 +3,29 @@
 import requests
 
 
-def create_playlist(user_id, access_token, playlist_name, description="Created by VibeAI", public=True):
-    url = f"https://api.spotify.com/v1/users/{user_id}/playlists"
+def create_playlist(access_token, playlist_name, description="Created by VibeAI", public=True):
+    # Fetch the user's Spotify ID from their access token
+    user_info = requests.get(
+        "https://api.spotify.com/v1/me",
+        headers={"Authorization": f"Bearer {access_token}"}
+    )
 
+    if user_info.status_code != 200:
+        return {"error": "Failed to fetch user profile"}
+
+    user_id = user_info.json()["id"]
+
+    # Create the playlist
+    url = f"https://api.spotify.com/v1/users/{user_id}/playlists"
     payload = {
         "name": playlist_name,
         "description": description,
         "public": public
     }
-
     headers = {
         "Authorization": f"Bearer {access_token}",
         "Content-Type": "application/json"
     }
-
     response = requests.post(url, json=payload, headers=headers)
     return response.json()
 

@@ -81,11 +81,11 @@ function Results() {
             } catch (error) {
               console.error("Error creating playlist:", error);
             }
-          }} style={{ 
-            backgroundColor: '#2ecc71', 
-            color: 'white', 
-            fontSize: '20px', 
-            padding: '10px 30px', 
+          }} style={{
+            backgroundColor: '#2ecc71',
+            color: 'white',
+            fontSize: '20px',
+            padding: '10px 30px',
             margin: '10px 0',
             border: 'none',
             borderRadius: '4px',
