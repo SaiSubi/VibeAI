@@ -40,7 +40,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173",
-        "https://vibeai-frontend.netlify.app"
+        "https://vibeaimusic.netlify.app" 
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -145,7 +145,7 @@ def callback(request: Request, code: str):
     )
 
     # Set refresh token and user_id in cookies with correct options for cross-origin/frontend access
-    redirect = RedirectResponse(url="https://vibeai-frontend.netlify.app/home")
+    redirect = RedirectResponse(url="https://vibeaimusic.netlify.app/home")
     redirect.set_cookie(
         key="refresh_token",
         value=token_data["refresh_token"],
