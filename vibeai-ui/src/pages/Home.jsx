@@ -15,7 +15,7 @@ function Home() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    axios.get(`${BASE_URL}/health`)
+    axios.get(`${BASE_URL}/health`, { withCredentials: true })
       .then((response) => {
         setBackendStatus(response.data.message || "Backend is up!");
       })
@@ -186,9 +186,9 @@ function Home() {
         onClick={async () => {
           setIsLoading(true);
           try {
-            const response = await recommendVibe(userPrompt);
-            setRecommendedText(response.groq_recommendations);
-            navigate("/results", { state: { text: response.groq_recommendations } });
+            const response = await axios.post(`${BASE_URL}/recommend`, { prompt: userPrompt }, { withCredentials: true });
+            setRecommendedText(response.data.groq_recommendations);
+            navigate("/results", { state: { text: response.data.groq_recommendations } });
           } catch (err) {
             console.error("Recommendation failed:", err);
           } finally {

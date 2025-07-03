@@ -75,7 +75,7 @@ function Results() {
         <>
           <button onClick={async () => {
             try {
-              const response = await createPlaylistFromGROQ(recommendation);
+              const response = await createPlaylistFromGROQ(recommendation, { withCredentials: true });
               setPlaylistUrl(response.playlist_url);
               setIsPlaylistCreated(true);
             } catch (error) {
