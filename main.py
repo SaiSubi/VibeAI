@@ -149,19 +149,21 @@ def callback(request: Request, code: str):
         expires_at=expires_at
     )
 
-    # Set refresh token and user_id in cookies with correct options for cross-origin/frontend access
+    # Set refresh token and user_id in cookies with correct options for secure cross-origin/frontend access
     redirect = RedirectResponse(url="https://vibeaimusic.netlify.app/home")
     redirect.set_cookie(
         key="refresh_token",
         value=token_data["refresh_token"],
         httponly=True,
-        samesite="lax"
+        samesite="none",
+        secure=True
     )
     redirect.set_cookie(
         key="user_id",
         value=user_id,
         httponly=False,
-        samesite="lax"
+        samesite="none",
+        secure=True
     )
 
     return redirect
