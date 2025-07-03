@@ -74,6 +74,11 @@ def get_refresh_token(user_id=None):
 def root():
     return {"message": "VibeAI backend is live!"}
 
+# Health check endpoint
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
+
 # ──────────────────────────────────────────────
 # 🎧 Spotify Login Route
 # ──────────────────────────────────────────────
