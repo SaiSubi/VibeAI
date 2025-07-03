@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { createPlaylistFromGROQ } from '../api'; 
+import { createPlaylistFromGROQ, BASE_URL } from '../api'; 
 
 function Results() {
   const [isPlaylistCreated, setIsPlaylistCreated] = useState(false);

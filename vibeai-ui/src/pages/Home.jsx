@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { useEffect } from "react";
 import { getHealth, recommendVibe } from "../api";
+import { BASE_URL } from '../api';
+import axios from 'axios';
 import { useNavigate } from "react-router-dom";
 
 function Home() {
@@ -13,9 +15,9 @@ function Home() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    getHealth()
+    axios.get(`${BASE_URL}/health`)
       .then((response) => {
-        setBackendStatus(response.message || "Backend is up!");
+        setBackendStatus(response.data.message || "Backend is up!");
       })
       .catch((error) => {
         console.error("Backend check failed:", error);

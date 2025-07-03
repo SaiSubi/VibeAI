@@ -3,6 +3,7 @@ import { Box, Button, Image, Text, VStack } from '@chakra-ui/react';
 import { useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { BASE_URL } from '../api';
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -13,7 +14,7 @@ const Landing = () => {
     const checkToken = async () => {
       console.log("🟠 Calling /check_refresh_token...");
       try {
-        const response = await axios.get("http://localhost:8000/check_refresh_token", {
+        const response = await axios.get(`${BASE_URL}/check_refresh_token`, {
           withCredentials: true,
         });
         console.log("🟢 Response from /check_refresh_token:", JSON.stringify(response.data));
@@ -32,7 +33,7 @@ const Landing = () => {
           }
 
           await axios.post(
-            `http://localhost:8000/refresh_token?user_id=${userId}`,
+            `${BASE_URL}/refresh_token?user_id=${userId}`,
             {},
             { withCredentials: true }
           );
@@ -80,7 +81,7 @@ const Landing = () => {
           size="lg"
           _hover={{ bg: "#1ed760" }}
           onClick={() => {
-            window.location.href = "http://localhost:8000/login";
+            window.location.href = `${BASE_URL}/login`;
           }}
         >
           LOGIN WITH SPOTIFY
@@ -97,7 +98,7 @@ const Landing = () => {
           size="md"
           _hover={{ bg: "#1ed760" }}
           onClick={() => {
-            window.location.href = "http://localhost:8000/login";
+            window.location.href = `${BASE_URL}/login`;
           }}
         >
           Try it Yourself
