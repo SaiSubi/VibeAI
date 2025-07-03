@@ -7,7 +7,7 @@ const getUserIdFromCookie = () => {
   return match ? match.split("=")[1] : null;
 };
 
-const BASE_URL = "https://vibeai-backend.onrender.com"; // Updated to live backend
+export const BASE_URL = "https://vibeai-backend.onrender.com"; // Updated to live backend
 
 export const getHealth = async () => {
   try {
