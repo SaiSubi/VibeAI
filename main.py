@@ -475,12 +475,18 @@ def recommend_vibe_based_music(vibe_prompt: str = Form(...), user_id: str = Quer
     
     # Step 1: Get top tracks
     top_tracks = get_user_top_tracks(access_token)
+    if not top_tracks:
+        print("❌ No top tracks found")
     liked_tracks_data = get_liked_songs(access_token)
+    if not liked_tracks_data:
+        print("❌ No liked tracks data found")
     liked_tracks = extract_song_info_from_liked_tracks(liked_tracks_data)
 
     top_track_list = top_tracks.get("tracks", []) if isinstance(top_tracks, dict) else []
     combined_tracks = top_track_list + liked_tracks
     combined_tracks = combined_tracks[:20]  # Limit the list
+    if not combined_tracks:
+        return {"error": "❌ No songs found to base recommendations on."}
 
     base_prompt = f"""
     You're a personalized music assistant.
