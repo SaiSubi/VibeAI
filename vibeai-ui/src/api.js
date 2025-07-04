@@ -1,5 +1,8 @@
 import axios from "axios";
 
+// Ensure cookies are included in all requests by default
+axios.defaults.withCredentials = true;
+
 // 🔐 Utility to extract user ID from browser cookies
 const getUserIdFromCookie = () => {
   const match = document.cookie
