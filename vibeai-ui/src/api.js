@@ -38,6 +38,7 @@ export const recommendVibe = async (prompt) => {
         withCredentials: true,
       }
     );
+    console.log("✅ Groq recommendation response:", response.data);
     return response.data;
   } catch (error) {
     console.error("Error fetching recommendations:", error);
@@ -61,7 +62,7 @@ export const createPlaylistFromGroq = async (recommendationText) => {
         withCredentials: true,
       }
     );
-
+    console.log("✅ Playlist creation response:", response.data);
     return response.data; // This should contain the playlist link
   } catch (error) {
     console.error("Error creating playlist:", error);
@@ -78,6 +79,7 @@ export const checkRefreshToken = async () => {
     const response = await axios.get(`${BASE_URL}/check_refresh_token`, {
       withCredentials: true,
     });
+    console.log("✅ Refresh token check response:", response.data);
     return response.data;
   } catch (error) {
     console.error("Error checking refresh token:", error);

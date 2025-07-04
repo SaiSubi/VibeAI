@@ -14,6 +14,8 @@ function Results() {
     console.log("Location state in Results:", location.state);
     if (location.state?.text) {
       setRecommendation(location.state.text);
+    } else {
+      console.warn("⚠️ No recommendation text found in location state.");
     }
   }, [location.state]);
 
@@ -75,7 +77,10 @@ function Results() {
         <>
           <button onClick={async () => {
             try {
+              console.log("Creating playlist with recommendation:", recommendation);
               const response = await createPlaylistFromGroq(recommendation, { withCredentials: true });
+              console.log("Received response from createPlaylistFromGroq:", response);
+              console.log("✅ Playlist successfully created. URL:", response.playlist_url);
               setPlaylistUrl(response.playlist_url);
               setIsPlaylistCreated(true);
             } catch (error) {
