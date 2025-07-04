@@ -1,20 +1,12 @@
 # This module provides functions to interact with the Spotify API 
-
+from typing import List, Tuple
+import logging
+logger = logging.getLogger(__name__)
 import requests
 
 
-def create_playlist(access_token, playlist_name, description="Created by VibeAI", public=True):
-    # Fetch the user's Spotify ID from their access token
-    user_info = requests.get(
-        "https://api.spotify.com/v1/me",
-        headers={"Authorization": f"Bearer {access_token}"}
-    )
-
-    if user_info.status_code != 200:
-        return {"error": "Failed to fetch user profile"}
-
-    user_id = user_info.json()["id"]
-
+def create_playlist(user_id, access_token, playlist_name, description="Created by VibeAI", public=True):
+    # user_id should be passed as an argument to this function
     # Create the playlist
     url = f"https://api.spotify.com/v1/users/{user_id}/playlists"
     payload = {
@@ -71,3 +63,27 @@ def extract_song_info_from_liked_tracks(response_json):
         artist_name = artists[0]["name"] if artists else "Unknown Artist"
         songs.append(f"{name} by {artist_name}")
     return songs
+
+
+def search_songs_on_spotify(songs: List[Tuple[str, str]], access_token: str) -> List[str]:
+    """
+    Searches for songs on Spotify and returns a list of track URIs.
+    """
+    track_uris = []
+    headers = {"Authorization": f"Bearer {access_token}"}
+    search_url = "https://api.spotify.com/v1/search"
+
+    for song_name, artist_name in songs:
+        query = f"{song_name} artist:{artist_name}"
+        params = {"q": query, "type": "track", "limit": 1}
+
+        response = requests.get(search_url, headers=headers, params=params)
+        result = response.json()
+
+        if response.status_code == 200 and result.get("tracks", {}).get("items"):
+            track = result["tracks"]["items"][0]
+            track_uris.append(track["uri"])
+        else:
+            logger.warning(f"🔍 Not found on Spotify: {song_name} by {artist_name}")
+
+    return track_uris
