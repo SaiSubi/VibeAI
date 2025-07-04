@@ -3,7 +3,7 @@ import { Box, Button, Image, Text, VStack } from '@chakra-ui/react';
 import { useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { BASE_URL } from '../api';
+import { BASE_URL, checkRefreshToken, refreshAccessToken } from '../api';
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -12,14 +12,11 @@ const Landing = () => {
     console.log("🟡 Landing component mounted");
 
     const checkToken = async () => {
-      console.log("🟠 Calling /check_refresh_token...");
+      console.log("🟠 Checking refresh token...");
       try {
-        const response = await axios.get(`${BASE_URL}/check_refresh_token`, {
-          withCredentials: true,
-        });
-        console.log("🟢 Response from /check_refresh_token:", JSON.stringify(response.data));
+        const response = await checkRefreshToken();
 
-        if (response.data.valid) {
+        if (response.valid) {
           console.log("✅ Valid refresh token found. Refreshing access token...");
 
           const userId = document.cookie
@@ -32,11 +29,7 @@ const Landing = () => {
             return;
           }
 
-          await axios.post(
-            `${BASE_URL}/refresh_token?user_id=${userId}`,
-            {},
-            { withCredentials: true }
-          );
+          await refreshAccessToken(userId);
 
           console.log("✅ Access token refreshed. Redirecting /home...");
           navigate("/home");
@@ -45,14 +38,6 @@ const Landing = () => {
         }
       } catch (error) {
         console.error("🔴 Token check failed:", error);
-        if (error.response) {
-          console.error("🔴 Server responded with status:", error.response.status);
-          console.error("🔴 Response data:", error.response.data);
-        } else if (error.request) {
-          console.error("🔴 No response received. Request:", error.request);
-        } else {
-          console.error("🔴 Error setting up request:", error.message);
-        }
       }
     };
 

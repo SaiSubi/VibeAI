@@ -1,5 +1,6 @@
 import axios from "axios";
 
+// 🔐 Utility to extract user ID from browser cookies
 const getUserIdFromCookie = () => {
   const match = document.cookie
     .split("; ")
@@ -7,8 +8,10 @@ const getUserIdFromCookie = () => {
   return match ? match.split("=")[1] : null;
 };
 
+// 🌐 Base URL of the backend API
 export const BASE_URL = "https://vibeai-backend.onrender.com"; // Updated to live backend
 
+// ✅ Check if the backend is live and responsive
 export const getHealth = async () => {
   try {
     const response = await axios.get(`${BASE_URL}/`);
@@ -19,6 +22,7 @@ export const getHealth = async () => {
   }
 };
 
+// 🎵 Send a mood prompt to Groq to get a music recommendation message
 export const recommendVibe = async (prompt) => {
   try {
     const userId = getUserIdFromCookie();
@@ -41,6 +45,7 @@ export const recommendVibe = async (prompt) => {
   }
 };
 
+// 🎧 Convert Groq-generated recommendation text into a Spotify playlist
 export const createPlaylistFromGroq = async (recommendationText) => {
   try {
     const userId = getUserIdFromCookie();
@@ -64,4 +69,33 @@ export const createPlaylistFromGroq = async (recommendationText) => {
   }
 };
 
+// 🧼 Temporary backward-compatible export alias
 export { createPlaylistFromGroq as createPlaylistFromGROQ };
+
+// 🔄 Check if the user's refresh token is valid
+export const checkRefreshToken = async () => {
+  try {
+    const response = await axios.get(`${BASE_URL}/check_refresh_token`, {
+      withCredentials: true,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error checking refresh token:", error);
+    return { valid: false };
+  }
+};
+
+// ♻️ Manually refresh the user's Spotify access token using their user ID
+export const refreshAccessToken = async (userId) => {
+  try {
+    const response = await axios.post(
+      `${BASE_URL}/refresh_token?user_id=${userId}`,
+      {},
+      { withCredentials: true }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error refreshing access token:", error);
+    return { error: "Failed to refresh access token" };
+  }
+};

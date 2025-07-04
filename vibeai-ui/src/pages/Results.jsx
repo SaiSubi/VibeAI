@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { createPlaylistFromGROQ, BASE_URL } from '../api'; 
+import { createPlaylistFromGroq, BASE_URL } from '../api'; 
 
 function Results() {
   const [isPlaylistCreated, setIsPlaylistCreated] = useState(false);
@@ -75,7 +75,7 @@ function Results() {
         <>
           <button onClick={async () => {
             try {
-              const response = await createPlaylistFromGROQ(recommendation, { withCredentials: true });
+              const response = await createPlaylistFromGroq(recommendation, { withCredentials: true });
               setPlaylistUrl(response.playlist_url);
               setIsPlaylistCreated(true);
             } catch (error) {

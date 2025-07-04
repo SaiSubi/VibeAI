@@ -1,8 +1,6 @@
 import React, { useState } from "react";
 import { useEffect } from "react";
-import { getHealth, recommendVibe } from "../api";
-import { BASE_URL } from '../api';
-import axios from 'axios';
+import { recommendVibe } from "../api";
 import { useNavigate } from "react-router-dom";
 
 function Home() {
@@ -10,19 +8,10 @@ function Home() {
   const [myMusic, setMyMusic] = useState(true);
   const [newMusic, setNewMusic] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [backendStatus, setBackendStatus] = useState("");
   const [recommendedText, setRecommendedText] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
-    axios.get(`${BASE_URL}/health`, { withCredentials: true })
-      .then((response) => {
-        setBackendStatus(response.data.message || "Backend is up!");
-      })
-      .catch((error) => {
-        console.error("Backend check failed:", error);
-        setBackendStatus("Backend is down or unreachable.");
-      });
   }, []);
 
   const toggleMyMusic = () => {
@@ -103,9 +92,6 @@ function Home() {
       }}>
         <img src="/logo.png" alt="VibeAI Logo" style={{ width: "100px", margin: "0 auto" }} />
         <h2>Welcome User! Ready to Vibe?</h2>
-        <p style={{ color: "#ccc", fontSize: "14px" }}>
-          Backend Status: {backendStatus}
-        </p>
 
         <div style={{ display: "flex", justifyContent: "center", gap: "10px", margin: "20px 0" }}>
           <textarea
@@ -186,9 +172,9 @@ function Home() {
         onClick={async () => {
           setIsLoading(true);
           try {
-            const response = await axios.post(`${BASE_URL}/recommend`, { prompt: userPrompt }, { withCredentials: true });
-            setRecommendedText(response.data.groq_recommendations);
-            navigate("/results", { state: { text: response.data.groq_recommendations } });
+            const response = await recommendVibe(userPrompt);
+            setRecommendedText(response.groq_recommendations);
+            navigate("/results", { state: { text: response.groq_recommendations } });
           } catch (err) {
             console.error("Recommendation failed:", err);
           } finally {
