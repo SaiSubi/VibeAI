@@ -16,7 +16,7 @@ def recommend_vibe_based_music(payload: GroqRequest):
     
     combined_tracks = get_user_music_history(access_token)
     if not combined_tracks:
-        return {"error": "❌ No songs found to base recommendations on."}
+        logger.warning("⚠️ No music history found. Building prompt using only vibe_prompt.")
 
     base_prompt = build_groq_prompt(combined_tracks, payload.vibe_prompt)
 

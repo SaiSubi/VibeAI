@@ -17,10 +17,25 @@ def get_user_music_history(access_token: str):
     top_track_list = top_tracks.get("tracks", []) if isinstance(top_tracks, dict) else []
     combined_tracks = top_track_list + liked_tracks
     combined_tracks = combined_tracks[:20]  # Limit the list
-    if not combined_tracks:
-        return {"error": "❌ No songs found to base recommendations on."}
-    return(combined_tracks)
+    return combined_tracks
 def build_groq_prompt(combined_tracks, vibe_prompt):
+    if not combined_tracks:
+        return f"""
+        You're a personalized music assistant.
+
+        The user has described their current mood or desired vibe as:
+        "{vibe_prompt}"
+
+        Recommend 5 songs that match the emotional tone, musical style, and overall feel of this vibe.
+
+        🎯 Guidelines:
+        - prefer familiar songs.
+        - Match the *language*, *genre*, and *energy level* if clear.
+        - Output strictly in this format:
+        1. **Song Name** by Artist
+        2. ...
+        """
+
     base_prompt = f"""
     You're a personalized music assistant.
 
@@ -39,7 +54,7 @@ def build_groq_prompt(combined_tracks, vibe_prompt):
     1. **Song Name** by Artist
     2. ...
     """
-    return(base_prompt)
+    return base_prompt
 
 def call_groq_api(prompt: str):
     client = OpenAI(

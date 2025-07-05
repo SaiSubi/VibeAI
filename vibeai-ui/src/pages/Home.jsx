@@ -20,6 +20,7 @@ function Home() {
     }
   }, []);
 
+  /*
   const toggleMyMusic = () => {
     if (!myMusic) {
       setMyMusic(true);
@@ -37,6 +38,7 @@ function Home() {
       setNewMusic(false);
     }
   };
+  */
 
   return (
     <>
@@ -115,6 +117,7 @@ function Home() {
               resize: "none"
             }}
           />
+          {/*
           <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", gap: "10px", alignItems: "flex-start" }}>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", color: "white" }}>
               <span>My Music</span>
@@ -154,6 +157,7 @@ function Home() {
                 <span className="slider round"></span>
               </label>
             </div>
+          */}
             <button
               onClick={() => setUserPrompt("")}
               disabled={isLoading}
@@ -171,7 +175,9 @@ function Home() {
             >
               Clear Text
             </button>
+          {/* 
           </div>
+          */}
         </div>
 
       <button
