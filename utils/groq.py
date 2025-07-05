@@ -9,12 +9,17 @@ def get_user_music_history(access_token: str):
     top_tracks = get_user_top_tracks(access_token)
     if not top_tracks:
         logger.warning("❌ No top tracks found")
+
     liked_tracks_data = get_liked_songs(access_token)
     if not liked_tracks_data:
         logger.warning("❌ No liked tracks data found")
-    liked_tracks = extract_song_info_from_liked_tracks(liked_tracks_data)
 
-    top_track_list = top_tracks.get("tracks", []) if isinstance(top_tracks, dict) else []
+    if not top_tracks and not liked_tracks_data:
+        logger.warning("⚠️ No user history available.")
+        return []
+
+    liked_tracks = extract_song_info_from_liked_tracks(liked_tracks_data)
+    top_track_list = top_tracks.get("tracks", [])
     combined_tracks = top_track_list + liked_tracks
     combined_tracks = combined_tracks[:20]  # Limit the list
     return combined_tracks
