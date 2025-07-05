@@ -72,7 +72,7 @@ def call_groq_api(prompt: str):
 
     return (response)
 
-def extract_songs_from_groq_response(groq_response: str) -> List[Tuple[str, str]]:
+def extract_songs_from_groq_response(groq_response: str) -> List[str]:
     """
     Extracts (song, artist) pairs from Groq's response text.
     """
@@ -80,9 +80,10 @@ def extract_songs_from_groq_response(groq_response: str) -> List[Tuple[str, str]
     songs = []
 
     for line in lines:
-        match = re.match(r"\d+\.\s+\*\*(.+?)\*\* by (.+?)\s*(?:-|$)", line.strip())
-        if match:
-            song_name, artist_name = match.groups()
-            songs.append((song_name.strip(), artist_name.strip()))
+        line = line.strip()
+        if re.match(r"^\d+\.", line):
+            # Remove the number prefix and treat the rest as a single fuzzy search query
+            query = re.sub(r"^\d+\.\s*", "", line)
+            songs.append((query)) 
 
     return songs
