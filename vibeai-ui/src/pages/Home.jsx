@@ -12,6 +12,12 @@ function Home() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const userIdFromURL = urlParams.get("user_id");
+    if (userIdFromURL) {
+      localStorage.setItem("user_id", userIdFromURL);
+      console.log("✅ Stored user_id in localStorage:", userIdFromURL);
+    }
   }, []);
 
   const toggleMyMusic = () => {

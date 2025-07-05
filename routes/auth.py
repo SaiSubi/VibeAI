@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Request
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, JSONResponse
 import urllib.parse
 import base64
 from datetime import datetime, timedelta
 import requests
+from typing import Optional
 from utils.config import (
     SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET,
     SPOTIFY_REDIRECT_URI, FRONTEND_URL
@@ -81,31 +82,14 @@ def callback(request: Request, code: str):
         expires_at=expires_at
     )
 
-    # Set refresh token and user_id in cookies with correct options for secure cross-origin/frontend access
-    logger.info(f"➡️ FRONTEND_URL: {FRONTEND_URL}")
-    redirect = RedirectResponse(url=f"{FRONTEND_URL}/home")
-    redirect.set_cookie(
-        key="refresh_token",
-        value=token_data["refresh_token"],
-        httponly=True,
-        samesite="none",
-        secure=True
-    )
-    redirect.set_cookie(
-        key="user_id",
-        value=user_id,
-        httponly=False,
-        samesite="none",
-        secure=True
-    )
-
+    logger.info(f"✅ Redirecting user_id to frontend.")
+    redirect = RedirectResponse(url=f"{FRONTEND_URL}/home?user_id={user_id}")
     return redirect
 
 @router.get("/check_refresh_token")
-def check_refresh_token(request: Request):
-    user_id = request.cookies.get("user_id")
+def check_refresh_token(user_id: Optional[str] = None):
     if not user_id:
-        logger.warning("❌ No user_id cookie found.")
+        logger.warning("❌ No user_id provided.")
         return {"valid": False}
 
     try:

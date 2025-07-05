@@ -3,12 +3,9 @@ import axios from "axios";
 // Ensure cookies are included in all requests by default
 axios.defaults.withCredentials = true;
 
-// 🔐 Utility to extract user ID from browser cookies
-const getUserIdFromCookie = () => {
-  const match = document.cookie
-    .split("; ")
-    .find((row) => row.startsWith("user_id="));
-  return match ? match.split("=")[1] : null;
+// 🔐 Utility to extract user ID from localStorage
+const getUserId = () => {
+  return localStorage.getItem("user_id");
 };
 
 // 🌐 Base URL of the backend API
@@ -28,7 +25,7 @@ export const getHealth = async () => {
 // 🎵 Send a mood prompt to Groq to get a music recommendation message
 export const recommendVibe = async (prompt) => {
   try {
-    const userId = getUserIdFromCookie();
+    const userId = getUserId();
     if (!userId) throw new Error("Missing user ID");
 
     const formData = new FormData();
@@ -52,7 +49,7 @@ export const recommendVibe = async (prompt) => {
 // 🎧 Convert Groq-generated recommendation text into a Spotify playlist
 export const createPlaylistFromGroq = async (recommendationText) => {
   try {
-    const userId = getUserIdFromCookie();
+    const userId = getUserId();
     if (!userId) throw new Error("Missing user ID");
 
     const formData = new FormData();
@@ -79,9 +76,17 @@ export { createPlaylistFromGroq as createPlaylistFromGROQ };
 // 🔄 Check if the user's refresh token is valid
 export const checkRefreshToken = async () => {
   try {
-    const response = await axios.get(`${BASE_URL}/check_refresh_token`, {
-      withCredentials: true,
-    });
+    const userId = localStorage.getItem("user_id");
+    if (!userId) {
+      console.log("No user ID found in localStorage.");
+      return { valid: false };
+    }
+    const response = await axios.get(
+      `${BASE_URL}/check_refresh_token?user_id=${userId}`,
+      {
+        withCredentials: true,
+      }
+    );
     console.log("✅ Refresh token check response:", response.data);
     return response.data;
   } catch (error) {

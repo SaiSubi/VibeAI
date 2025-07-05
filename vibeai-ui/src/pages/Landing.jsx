@@ -19,17 +19,15 @@ const Landing = () => {
         if (response.valid) {
           console.log("✅ Valid refresh token found. Refreshing access token...");
 
-          const userId = document.cookie
-            .split("; ")
-            .find((row) => row.startsWith("user_id="))
-            ?.split("=")[1];
+          // Previously used cookies to get user_id; now using localStorage
+          const storedUserId = localStorage.getItem("user_id");
 
-          if (!userId) {
-            console.warn("⚠️ user_id cookie not found. Cannot refresh token.");
+          if (!storedUserId) {
+            console.warn("⚠️ user_id not found in localStorage. Cannot refresh token.");
             return;
           }
 
-          await refreshAccessToken(userId);
+          await refreshAccessToken(storedUserId);
 
           console.log("✅ Access token refreshed. Redirecting /home...");
           navigate("/home");
