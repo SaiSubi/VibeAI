@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 @router.get("/login")
 def login():
     logger.info(f"🧭 REDIRECT_URI during login: {SPOTIFY_REDIRECT_URI}")
-    scopes = "user-library-read playlist-modify-public user-top-read"
+    scopes = "user-library-read playlist-modify-public user-top-read user-read-email"
     auth_url = "https://accounts.spotify.com/authorize"
 
     query_params = {
