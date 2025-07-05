@@ -98,8 +98,8 @@ export const checkRefreshToken = async () => {
 export const refreshAccessToken = async (userId) => {
   try {
     const response = await axios.post(
-      `${BASE_URL}/refresh_token?user_id=${userId}`,
-      {}
+      `${BASE_URL}/refresh_token`,
+      { user_id: userId }
     );
     return response.data;
   } catch (error) {

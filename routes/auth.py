@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, Body
 from fastapi.responses import RedirectResponse, JSONResponse
 import urllib.parse
 import base64
@@ -11,6 +11,7 @@ from utils.config import (
 )
 from utils.db import save_tokens_to_db, get_tokens_for_user
 import logging
+from utils.token import refresh_access_token
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -101,3 +102,13 @@ def check_refresh_token(user_id: Optional[str] = None):
     except Exception as e:
         logger.error(f"❌ Error checking refresh token: {e}")
         return {"valid": False}
+
+
+@router.post("/refresh_token")
+def refresh_token_endpoint(payload: dict = Body(...)):
+    user_id = payload.get("user_id")
+    if not user_id:
+        return JSONResponse(content={"error": "❌ No user_id provided"}, status_code=400)
+
+    result = refresh_access_token(user_id)
+    return JSONResponse(content=result)
