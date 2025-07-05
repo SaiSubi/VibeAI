@@ -35,7 +35,11 @@ def add_tracks_to_playlist(playlist_id, track_uris, access_token):
     }
 
     response = requests.post(url, json=payload, headers=headers)
-    return response.json()
+    try:
+        return response.json()
+    except ValueError:
+        logger.error(f"❌ Failed to decode JSON from Spotify response: {response.text}")
+        return {"error": "Invalid JSON response from Spotify"}
 
 def get_user_top_tracks(access_token, limit=10):
     url = f"https://api.spotify.com/v1/me/top/tracks?limit={limit}"
