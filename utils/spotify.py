@@ -40,11 +40,12 @@ def add_tracks_to_playlist(playlist_id, track_uris, access_token):
 
     response = requests.post(url, json=payload, headers=headers)
 
+    logger.error(f"❌ Spotify raw response debug — Status: {response.status_code}, Headers: {dict(response.headers)}, Body: {response.text}")
     logger.debug(f"🔍 Full Spotify response:\nStatus: {response.status_code}\nHeaders: {response.headers}\nBody: {response.text}")
     try:
         response_json = response.json()
     except ValueError:
-        logger.error(f"❌ Failed to decode JSON from Spotify response: {response.text}")
+        logger.error("❌ Could not decode Spotify's response as JSON. Logged above.")
         return {"error": "Invalid JSON response from Spotify"}
 
     if response.status_code != 201:

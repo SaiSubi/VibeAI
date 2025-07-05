@@ -34,13 +34,15 @@ def groq_to_playlist(data: GroqToPlaylistRequest) -> JSONResponse:
         return JSONResponse(content={"error": "❌ No matching Spotify tracks found."})
 
     # Step 3: Create new playlist (replacing old logic)
-    playlist_id = create_playlist(
+    playlist = create_playlist(
         user_id=data.user_id,
         access_token=access_token,
         playlist_name="Groq Vibe Recommendations",
         description="Songs recommended by Groq based on your vibes 💫",
         public=True
     )
+    playlist_id = playlist["id"]
+    playlist_url = playlist["external_urls"]["spotify"]
 
     # Step 4: Add tracks
     add_response = add_tracks_to_playlist(playlist_id, track_uris, access_token)
@@ -48,6 +50,6 @@ def groq_to_playlist(data: GroqToPlaylistRequest) -> JSONResponse:
     return JSONResponse(content={
         "message": "🎶 Groq songs added to playlist!",
         "playlist_id": playlist_id,
-        "playlist_url": f"https://open.spotify.com/playlist/{playlist_id}",
+        "playlist_url": playlist_url,
         "added_tracks": len(track_uris)
     })
