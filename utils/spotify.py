@@ -81,15 +81,16 @@ def extract_song_info_from_liked_tracks(response_json):
     return songs
 
 
-def search_songs_on_spotify(songs: List[str], access_token: str) -> List[str]:
+def search_songs_on_spotify(songs: List[Tuple[str, str]], access_token: str) -> List[str]:
     """
-    Searches for songs on Spotify using fuzzy queries and returns a list of track URIs.
+    Searches for songs on Spotify using song and artist pairs and returns a list of track URIs.
     """
     track_uris = []
     headers = {"Authorization": f"Bearer {access_token}"}
     search_url = "https://api.spotify.com/v1/search"
 
-    for query_string in songs:
+    for song_name, artist_name in songs:
+        query_string = f"{song_name} {artist_name}"
         logger.info(f"🔍 Searching Spotify for: {query_string}")
         params = {"q": query_string, "type": "track", "limit": 1}
         response = requests.get(search_url, headers=headers, params=params)
