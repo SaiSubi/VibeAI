@@ -54,7 +54,11 @@ def get_access_token(user_id=None):
     token_data = get_tokens_for_user(user_id)
     expires_at = token_data.get("expires_at")
 
-    if not expires_at or datetime.strptime(expires_at, "%Y-%m-%dT%H:%M:%S.%f") < datetime.utcnow():
+    if not expires_at or (
+        isinstance(expires_at, str) and datetime.strptime(expires_at, "%Y-%m-%dT%H:%M:%S.%f") < datetime.utcnow()
+    ) or (
+        isinstance(expires_at, datetime) and expires_at < datetime.utcnow()
+    ):
         logger.info("🔄 Access token expired. Refreshing...")
         refresh_access_token(user_id)
         token_data = get_tokens_for_user(user_id)  # Fetch updated tokens
