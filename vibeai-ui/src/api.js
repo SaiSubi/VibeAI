@@ -28,18 +28,19 @@ export const recommendVibe = async (prompt) => {
     const userId = getUserId();
     if (!userId) throw new Error("Missing user ID");
 
-    const formData = new FormData();
-    formData.append("vibe_prompt", prompt);
-
     const response = await axios.post(
-      `${BASE_URL}/groq-recommend-vibe?user_id=${userId}`,
-      formData,
+      `${BASE_URL}/groq-recommend-vibe`,
       {
-        withCredentials: true,
+        user_id: userId,
+        vibe_prompt: prompt
       }
     );
     console.log("✅ Groq recommendation response:", response.data);
-    return response.data;
+    if (response.data) {
+      return response.data;
+    } else {
+      return { error: "No recommendation data received" };
+    }
   } catch (error) {
     console.error("Error fetching recommendations:", error);
     return { error: "Failed to get recommendations" };
@@ -52,18 +53,19 @@ export const createPlaylistFromGroq = async (recommendationText) => {
     const userId = getUserId();
     if (!userId) throw new Error("Missing user ID");
 
-    const formData = new FormData();
-    formData.append("recommendation_text", recommendationText);
-
     const response = await axios.post(
-      `${BASE_URL}/groq-to-playlist?user_id=${userId}`,
-      formData,
+      `${BASE_URL}/groq-to-playlist`,
       {
-        withCredentials: true,
+        user_id: userId,
+        groq_response: recommendationText
       }
     );
     console.log("✅ Playlist creation response:", response.data);
-    return response.data; // This should contain the playlist link
+    if (response.data && response.data.playlist_url) {
+      return response.data; // This should contain the playlist link
+    } else {
+      return { error: "No playlist URL received" };
+    }
   } catch (error) {
     console.error("Error creating playlist:", error);
     return { error: "Failed to create playlist" };
@@ -82,10 +84,7 @@ export const checkRefreshToken = async () => {
       return { valid: false };
     }
     const response = await axios.get(
-      `${BASE_URL}/check_refresh_token?user_id=${userId}`,
-      {
-        withCredentials: true,
-      }
+      `${BASE_URL}/check_refresh_token?user_id=${userId}`
     );
     console.log("✅ Refresh token check response:", response.data);
     return response.data;
@@ -100,8 +99,7 @@ export const refreshAccessToken = async (userId) => {
   try {
     const response = await axios.post(
       `${BASE_URL}/refresh_token?user_id=${userId}`,
-      {},
-      { withCredentials: true }
+      {}
     );
     return response.data;
   } catch (error) {

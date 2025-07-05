@@ -3,6 +3,7 @@ import requests
 from fastapi import APIRouter, Body, Query
 from fastapi.responses import JSONResponse
 from typing import List, Tuple
+from pydantic import BaseModel
 from utils.token import get_access_token
 from utils.spotify import create_playlist, add_tracks_to_playlist, search_songs_on_spotify
 from utils.groq import extract_songs_from_groq_response
@@ -10,22 +11,20 @@ from utils.config import logger
 
 router = APIRouter()
 
-
-
+class GroqToPlaylistRequest(BaseModel):
+    groq_response: str
+    user_id: str
 
 
 @router.post("/groq-to-playlist")
-def groq_to_playlist(
-    groq_response: str = Body(..., embed=True),
-    user_id: str = Query(...)
-) -> JSONResponse:
+def groq_to_playlist(data: GroqToPlaylistRequest) -> JSONResponse:
     """
     Accepts Groq's recommendation text and creates a playlist based on extracted songs.
     """
-    access_token = get_access_token(user_id)
+    access_token = get_access_token(data.user_id)
 
     # Step 1: Extract (song, artist) pairs from Groq's response
-    songs = extract_songs_from_groq_response(groq_response)
+    songs = extract_songs_from_groq_response(data.groq_response)
     if not songs:
         return JSONResponse(content={"error": "❌ No valid songs found in Groq response."})
 
@@ -36,7 +35,7 @@ def groq_to_playlist(
 
     # Step 3: Create new playlist (replacing old logic)
     playlist_id = create_playlist(
-        user_id=user_id,
+        user_id=data.user_id,
         access_token=access_token,
         playlist_name="Groq Vibe Recommendations",
         description="Songs recommended by Groq based on your vibes 💫",
