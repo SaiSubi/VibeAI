@@ -23,6 +23,10 @@ def create_playlist(user_id, access_token, playlist_name, description="Created b
 
 
 def add_tracks_to_playlist(playlist_id, track_uris, access_token):
+    logger.info(f"🎵 Track URIs to be added: {track_uris}")
+    if not track_uris:
+        logger.warning("⚠️ No valid track URIs found. Skipping track addition.")
+        return {"error": "No tracks to add."}
     url = f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks"
 
     payload = {
@@ -78,7 +82,7 @@ def search_songs_on_spotify(songs: List[Tuple[str, str]], access_token: str) -> 
     search_url = "https://api.spotify.com/v1/search"
 
     for song_name, artist_name in songs:
-        query = f"{song_name} artist:{artist_name}"
+        query = f"{song_name} {artist_name}"
         params = {"q": query, "type": "track", "limit": 1}
 
         response = requests.get(search_url, headers=headers, params=params)
