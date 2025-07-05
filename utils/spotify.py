@@ -90,6 +90,7 @@ def search_songs_on_spotify(songs: List[str], access_token: str) -> List[str]:
     search_url = "https://api.spotify.com/v1/search"
 
     for query_string in songs:
+        logger.info(f"🔍 Searching Spotify for: {query_string}")
         params = {"q": query_string, "type": "track", "limit": 1}
         response = requests.get(search_url, headers=headers, params=params)
         try:
