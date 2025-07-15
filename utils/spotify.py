@@ -59,7 +59,11 @@ def get_user_top_tracks(access_token, limit=10):
         "Authorization": f"Bearer {access_token}"
     }
     response = requests.get(url, headers=headers)
-    return response.json()
+    try:
+        return response.json().get("items", [])
+    except ValueError:
+        logger.error("❌ Could not decode top tracks response.")
+        return []
 
 def get_liked_songs(access_token, limit=50, offset=0):
     url = f"https://api.spotify.com/v1/me/tracks?limit={limit}&offset={offset}"
@@ -67,13 +71,15 @@ def get_liked_songs(access_token, limit=50, offset=0):
         "Authorization": f"Bearer {access_token}"
     }
     response = requests.get(url, headers=headers)
-    return response.json()
+    try:
+        return response.json().get("items", [])
+    except ValueError:
+        logger.error("❌ Could not decode liked songs response.")
+        return []
 
-def extract_song_info_from_liked_tracks(response_json):
+def extract_song_info_from_liked_tracks(tracks):
     songs = []
-    items = response_json.get("items", [])
-    for item in items:
-        track = item.get("track", {})
+    for track in tracks:
         name = track.get("name", "Unknown Track")
         artists = track.get("artists", [])
         artist_name = artists[0]["name"] if artists else "Unknown Artist"
