@@ -99,7 +99,10 @@ def search_songs_on_spotify(songs: List[Tuple[str, str]], access_token: str) -> 
         query_string = f"{song_name} {artist_name}"
         logger.info(f"🔍 Searching Spotify for: {query_string}")
         params = {"q": query_string, "type": "track", "limit": 1}
+        logger.debug(f"🔍 Querying Spotify with params: {params}")
         response = requests.get(search_url, headers=headers, params=params)
+        logger.debug(f"📡 Spotify response status: {response.status_code}")
+        logger.debug(f"📄 Spotify response body: {response.text[:500]}")
         try:
             result = response.json()
         except ValueError:
