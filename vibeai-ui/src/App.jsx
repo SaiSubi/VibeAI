@@ -4,12 +4,14 @@ import Home from './pages/Home'
 import Results from './pages/Results'
 import HomeGen from './pages/HomeGen'
 import ResultsGen from './pages/ResultsGen'
+import Personal from './pages/personal'
 
 function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Landing />} />
+        <Route path="/" element={<Personal />} />
+        <Route path="/landing" element={<Landing />} />
         <Route path="/home" element={<Home />} />
         <Route path="/results" element={<Results />} />
         <Route path="/homegen" element={<HomeGen />} />
