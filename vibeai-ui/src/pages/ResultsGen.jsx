@@ -78,7 +78,7 @@ function ResultsGen() {
           <button onClick={async () => {
             try {
               console.log("Creating playlist with recommendation:", recommendation);
-              const response = await createPlaylistFromGroq(recommendation, { withCredentials: true, personalize: false });
+              const response = await createPlaylistFromGroq(recommendation, false);
               console.log("Received response from createPlaylistFromGroq:", response);
               console.log("✅ Playlist successfully created. URL:", response.playlist_url);
               setPlaylistUrl(response.playlist_url);

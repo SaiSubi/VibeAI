@@ -3,11 +3,12 @@ from pydantic import BaseModel
 from utils.token import get_access_token
 from utils.groq import get_user_music_history, build_prompt_with_history, build_prompt_without_history, call_groq_api
 from utils.config import logger
+from typing import Optional
 
 router = APIRouter()
 
 class GroqRequest(BaseModel):
-    user_id: str
+    user_id: Optional[str] = None
     vibe_prompt: str
     personalize: bool = True
 

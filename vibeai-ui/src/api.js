@@ -24,18 +24,25 @@ export const getHealth = async () => {
 };
 
 // 🎵 Send a mood prompt to Groq to get a music recommendation message
-export const recommendVibe = async (prompt) => {
+export const recommendVibe = async (prompt, personalize = true) => {
   try {
-    const userId = getUserId();
-    if (!userId) throw new Error("Missing user ID");
+    let payload;
 
-    const response = await axios.post(
-      `${BASE_URL}/groq-recommend-vibe`,
-      {
+    if (personalize) {
+      const userId = getUserId();
+      if (!userId) throw new Error("Missing user ID");
+      payload = {
         user_id: userId,
         vibe_prompt: prompt
-      }
-    );
+      };
+    } else {
+      payload = {
+        vibe_prompt: prompt,
+        personalize: false
+      };
+    }
+
+    const response = await axios.post(`${BASE_URL}/groq-recommend-vibe`, payload);
     console.log("✅ Groq recommendation response:", response.data);
     if (response.data) {
       return response.data;
@@ -49,21 +56,28 @@ export const recommendVibe = async (prompt) => {
 };
 
 // 🎧 Convert Groq-generated recommendation text into a Spotify playlist
-export const createPlaylistFromGroq = async (recommendationText) => {
+export const createPlaylistFromGroq = async (recommendationText, personalize = true) => {
   try {
-    const userId = getUserId();
-    if (!userId) throw new Error("Missing user ID");
+    let payload;
 
-    const response = await axios.post(
-      `${BASE_URL}/groq-to-playlist`,
-      {
+    if (personalize) {
+      const userId = getUserId();
+      if (!userId) throw new Error("Missing user ID");
+      payload = {
         user_id: userId,
         groq_response: recommendationText
-      }
-    );
+      };
+    } else {
+      payload = {
+        groq_response: recommendationText,
+        personalize: false
+      };
+    }
+
+    const response = await axios.post(`${BASE_URL}/groq-to-playlist`, payload);
     console.log("✅ Playlist creation response:", response.data);
     if (response.data && response.data.playlist_url) {
-      return response.data; // This should contain the playlist link
+      return response.data;
     } else {
       return { error: "No playlist URL received" };
     }

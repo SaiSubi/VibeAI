@@ -2,7 +2,7 @@ import re
 import requests
 from fastapi import APIRouter, Body, Query
 from fastapi.responses import JSONResponse
-from typing import List, Tuple
+from typing import Optional,List, Tuple
 from pydantic import BaseModel
 from utils.token import get_access_token, get_service_account_access_token
 from utils.spotify import create_playlist, add_tracks_to_playlist, search_songs_on_spotify
@@ -13,7 +13,7 @@ router = APIRouter()
 
 class GroqToPlaylistRequest(BaseModel):
     groq_response: str
-    user_id: str
+    user_id: Optional[str] = None
     personalize: bool = True
 
 
