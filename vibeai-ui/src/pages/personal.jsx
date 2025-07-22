@@ -16,7 +16,7 @@ const Personal = () => {
   const navigate = useNavigate();
 
   const handlePersonalizedAccess = () => {
-    const validKey = "1234-access"; // Replace with your actual secret
+    const validKey = "vibeaiforyou"; // Replace with your actual secret
 
     if (accessKey === validKey) {
       localStorage.setItem("vibeai_access_key", accessKey); // optional
@@ -77,6 +77,10 @@ const Personal = () => {
             </Button>
           </HStack>
           {error && <Text color="red.300" fontSize="sm">{error}</Text>}
+          <Text fontSize="sm" color="gray.400" maxW="sm" textAlign="center">
+            Based on Spotify&apos;s updated terms, I need to manually add you as a user (25 user limit) before I can provide anything personalised.
+            Send an email to <strong>vibeai16@gmail.com</strong> with your name and email ID linked to Spotify and I will add you as a user and share the access key.
+          </Text>
         </VStack>
       </VStack>
 
