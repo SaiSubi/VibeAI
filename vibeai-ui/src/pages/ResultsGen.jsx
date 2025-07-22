@@ -104,7 +104,7 @@ function ResultsGen() {
         </>
       )}
 
-      <button onClick={() => navigate('/home')} style={{ 
+      <button onClick={() => navigate('/homegen')} style={{ 
         backgroundColor: '#27ae60', 
         color: 'white', 
         fontSize: '20px', 
