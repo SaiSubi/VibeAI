@@ -4,7 +4,7 @@ import requests
 from datetime import datetime, timedelta
 from utils.db import get_tokens_for_user, save_tokens_to_db
 import logging
-from utils.config import SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET
+from utils.config import SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, VibeAI_userid
 
 logger = logging.getLogger(__name__)
 
@@ -71,3 +71,6 @@ def get_refresh_token(user_id=None):
     else:
         raise Exception("❌ No user_id provided to get_refresh_token()")
     
+def get_service_account_access_token():
+    service_user_id = VibeAI_userid
+    return get_access_token(service_user_id)
