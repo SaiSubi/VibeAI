@@ -22,11 +22,12 @@ def groq_to_playlist(data: GroqToPlaylistRequest) -> JSONResponse:
     """
     Accepts Groq's recommendation text and creates a playlist based on extracted songs.
     """
-    access_token = (
-        get_access_token(data.user_id)
-        if data.personalize
-        else get_service_account_access_token()
-    )
+    if data.personalize:
+        if not data.user_id:
+            return JSONResponse(status_code=400, content={"error": "Missing user_id for personalized playlist."})
+        access_token = get_access_token(data.user_id)
+    else:
+        access_token = get_service_account_access_token()
 
     # Step 1: Extract (song, artist) pairs from Groq's response
     songs = extract_songs_from_groq_response(data.groq_response)

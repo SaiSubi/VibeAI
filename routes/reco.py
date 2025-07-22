@@ -14,15 +14,20 @@ class GroqRequest(BaseModel):
 
 @router.post("/groq-recommend-vibe")
 def recommend_vibe_based_music(payload: GroqRequest):
-    access_token = get_access_token(payload.user_id)
     
     if payload.personalize:
+        if not payload.user_id:
+            raise ValueError("❌ user_id is required for personalized requests.")
+
+        access_token = get_access_token(payload.user_id)
         combined_tracks = get_user_music_history(access_token)
+
         if combined_tracks:
             base_prompt = build_prompt_with_history(combined_tracks, payload.vibe_prompt)
         else:
             logger.warning("⚠️ No music history found. Building prompt using only vibe_prompt.")
             base_prompt = build_prompt_without_history(payload.vibe_prompt)
+
     else:
         base_prompt = build_prompt_without_history(payload.vibe_prompt)
 
