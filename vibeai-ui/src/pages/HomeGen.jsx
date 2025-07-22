@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { recommendVibe } from "../api";
 import { useNavigate } from "react-router-dom";
 
-function Home() {
+function HomeGen() {
   const [userPrompt, setUserPrompt] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [recommendedText, setRecommendedText] = useState("");

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { createPlaylistFromGroq, BASE_URL } from '../api'; 
 
-function Results() {
+function ResultsGen() {
   const [isPlaylistCreated, setIsPlaylistCreated] = useState(false);
   const [playlistUrl, setPlaylistUrl] = useState('');
   const navigate = useNavigate();
