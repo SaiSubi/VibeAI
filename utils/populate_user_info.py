@@ -8,12 +8,13 @@ import sys
 import os
 import requests
 import logging
+from datetime import datetime
 
 # Add the project root to Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from utils.db import get_users_without_info, update_user_info
-from utils.token import refresh_access_token
+from utils.db import get_users_without_info, update_user_info, get_tokens_for_user
+from utils.token import refresh_access_token, get_access_token
 from utils.config import logger
 
 def get_user_info_from_spotify(user_id, access_token):
@@ -57,45 +58,51 @@ def fill_missing_user_info():
     success_count = 0
     failed_count = 0
     
-    for user_id, access_token in users_without_info:
+    for user_id, old_access_token in users_without_info:
         logger.info(f"🔍 Processing user: {user_id}")
         
-        # Try to get user info from Spotify
-        user_name, user_email = get_user_info_from_spotify(user_id, access_token)
-        
-        if user_name and user_email:
-            # Update database with user info
-            try:
-                update_user_info(user_id, user_name, user_email)
-                success_count += 1
-                logger.info(f"✅ Updated user info for {user_id}")
-            except Exception as e:
-                logger.error(f"❌ Failed to update user info for {user_id}: {e}")
-                failed_count += 1
-        else:
-            # Try refreshing the token and retry
-            logger.info(f"🔄 Token might be expired for {user_id}, trying to refresh...")
-            try:
-                refresh_result = refresh_access_token(user_id)
-                if refresh_result.get("success"):
-                    # Get fresh access token and retry
-                    from utils.db import get_tokens_for_user
-                    tokens = get_tokens_for_user(user_id)
-                    user_name, user_email = get_user_info_from_spotify(user_id, tokens["access_token"])
+        try:
+            # First try with the existing access token
+            user_name, user_email = get_user_info_from_spotify(user_id, old_access_token)
+            
+            if user_name and user_email:
+                # Update database with user info
+                try:
+                    update_user_info(user_id, user_name, user_email)
+                    success_count += 1
+                    logger.info(f"✅ Updated user info for {user_id}")
+                except Exception as e:
+                    logger.error(f"❌ Failed to update user info for {user_id}: {e}")
+                    failed_count += 1
+            else:
+                # Token might be expired, try refreshing
+                logger.info(f"🔄 Token might be expired for {user_id}, trying to refresh...")
+                try:
+                    refresh_result = refresh_access_token(user_id)
                     
-                    if user_name and user_email:
-                        update_user_info(user_id, user_name, user_email)
-                        success_count += 1
-                        logger.info(f"✅ Updated user info for {user_id} after token refresh")
+                    # Check if refresh was successful (no "error" key means success)
+                    if "error" not in refresh_result:
+                        # Get fresh access token and retry
+                        tokens = get_tokens_for_user(user_id)
+                        user_name, user_email = get_user_info_from_spotify(user_id, tokens["access_token"])
+                        
+                        if user_name and user_email:
+                            update_user_info(user_id, user_name, user_email)
+                            success_count += 1
+                            logger.info(f"✅ Updated user info for {user_id} after token refresh")
+                        else:
+                            failed_count += 1
+                            logger.warning(f"⚠️ Still couldn't fetch user info for {user_id} after token refresh")
                     else:
                         failed_count += 1
-                        logger.warning(f"⚠️ Still couldn't fetch user info for {user_id} after token refresh")
-                else:
+                        logger.warning(f"⚠️ Couldn't refresh token for {user_id}: {refresh_result.get('error')}")
+                except Exception as e:
+                    logger.error(f"❌ Error refreshing token for {user_id}: {e}")
                     failed_count += 1
-                    logger.warning(f"⚠️ Couldn't refresh token for {user_id}")
-            except Exception as e:
-                logger.error(f"❌ Error refreshing token for {user_id}: {e}")
-                failed_count += 1
+                    
+        except Exception as e:
+            logger.error(f"❌ Error processing user {user_id}: {e}")
+            failed_count += 1
     
     logger.info(f"🎉 User info population complete!")
     logger.info(f"✅ Successfully updated: {success_count} users")

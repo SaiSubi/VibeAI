@@ -22,6 +22,69 @@ def create_playlist(user_id, access_token, playlist_name, description="Created b
     return response.json()
 
 
+def find_existing_playlist(user_id, access_token, playlist_name):
+    """
+    Search for an existing playlist with the given name for the user.
+    Returns the playlist object if found, None otherwise.
+    """
+    url = f"https://api.spotify.com/v1/users/{user_id}/playlists"
+    headers = {
+        "Authorization": f"Bearer {access_token}"
+    }
+    
+    try:
+        response = requests.get(url, headers=headers)
+        if response.status_code == 200:
+            playlists = response.json().get("items", [])
+            for playlist in playlists:
+                if playlist.get("name") == playlist_name:
+                    logger.info(f"✅ Found existing playlist: {playlist_name}")
+                    return playlist
+        else:
+            logger.error(f"❌ Failed to fetch playlists: {response.status_code}")
+    except Exception as e:
+        logger.error(f"❌ Error searching for existing playlist: {e}")
+    
+    return None
+
+
+def clear_playlist_tracks(playlist_id, access_token):
+    """
+    Remove all tracks from a playlist.
+    """
+    url = f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks"
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/json"
+    }
+    
+    # First, get all tracks in the playlist
+    try:
+        response = requests.get(url, headers=headers)
+        if response.status_code == 200:
+            tracks_data = response.json()
+            track_uris = [track["track"]["uri"] for track in tracks_data.get("items", [])]
+            
+            if track_uris:
+                # Remove all tracks
+                payload = {"tracks": [{"uri": uri} for uri in track_uris]}
+                delete_response = requests.delete(url, json=payload, headers=headers)
+                if delete_response.status_code == 200:
+                    logger.info(f"✅ Cleared {len(track_uris)} tracks from playlist {playlist_id}")
+                    return True
+                else:
+                    logger.error(f"❌ Failed to clear playlist: {delete_response.status_code}")
+            else:
+                logger.info(f"✅ Playlist {playlist_id} is already empty")
+                return True
+        else:
+            logger.error(f"❌ Failed to get playlist tracks: {response.status_code}")
+    except Exception as e:
+        logger.error(f"❌ Error clearing playlist: {e}")
+    
+    return False
+
+
 def add_tracks_to_playlist(playlist_id, track_uris, access_token):
     logger.debug(f"🎵 Track URIs to be added: {track_uris}")
     if not track_uris:
