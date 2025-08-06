@@ -235,7 +235,7 @@ function HomeGen() {
           cursor: isLoading ? "not-allowed" : "pointer"
         }}
       >
-        Logout
+        Change Mode
       </button>
 
       <footer style={{ marginTop: "30px", fontSize: "12px", color: "#ccc" }}>

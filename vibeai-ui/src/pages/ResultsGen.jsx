@@ -153,7 +153,7 @@ function ResultsGen() {
         borderRadius: '4px',
         cursor: 'pointer'
       }}>
-        Logout
+        Change Mode
       </button>
 
       <footer style={{ fontSize: '12px', marginTop: 'auto' }}>
