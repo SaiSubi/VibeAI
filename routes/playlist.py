@@ -71,10 +71,10 @@ def groq_to_playlist(data: GroqToPlaylistRequest) -> JSONResponse:
             playlist_url = playlist["external_urls"]["spotify"]
             logger.info(f"✅ Created new personalized playlist: {playlist_name}")
     else:
-        # General mode: Always create a new playlist with timestamp
-        from datetime import datetime
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
-        unique_playlist_name = f"{playlist_name} - {timestamp}"
+        # General mode: Always create a new playlist with unique identifier
+        import uuid
+        unique_id = str(uuid.uuid4())[:8]  # Use first 8 characters of UUID
+        unique_playlist_name = f"{playlist_name} - {unique_id}"
         
         playlist = create_playlist(
             user_id=user_id,
