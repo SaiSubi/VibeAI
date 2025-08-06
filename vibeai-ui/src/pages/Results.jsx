@@ -5,6 +5,7 @@ import { createPlaylistFromGroq, BASE_URL } from '../api';
 function Results() {
   const [isPlaylistCreated, setIsPlaylistCreated] = useState(false);
   const [playlistUrl, setPlaylistUrl] = useState('');
+  const [isCreatingPlaylist, setIsCreatingPlaylist] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   console.log("useLocation() in Results:", location);
@@ -75,29 +76,54 @@ function Results() {
         </>
       ) : (
         <>
-          <button onClick={async () => {
-            try {
-              console.log("Creating playlist with recommendation:", recommendation);
-              const response = await createPlaylistFromGroq(recommendation);
-              console.log("Received response from createPlaylistFromGroq:", response);
-              console.log("✅ Playlist successfully created. URL:", response.playlist_url);
-              setPlaylistUrl(response.playlist_url);
-              setIsPlaylistCreated(true);
-            } catch (error) {
-              console.error("Error creating playlist:", error);
-            }
-          }} style={{
-            backgroundColor: '#2ecc71',
-            color: 'white',
-            fontSize: '20px',
-            padding: '10px 30px',
-            margin: '10px 0',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer'
-          }}>
-            Create Playlist
+          <button 
+            onClick={async () => {
+              setIsCreatingPlaylist(true);
+              try {
+                console.log("Creating playlist with recommendation:", recommendation);
+                const response = await createPlaylistFromGroq(recommendation);
+                console.log("Received response from createPlaylistFromGroq:", response);
+                console.log("✅ Playlist successfully created. URL:", response.playlist_url);
+                setPlaylistUrl(response.playlist_url);
+                setIsPlaylistCreated(true);
+              } catch (error) {
+                console.error("Error creating playlist:", error);
+              } finally {
+                setIsCreatingPlaylist(false);
+              }
+            }} 
+            disabled={isCreatingPlaylist}
+            style={{
+              backgroundColor: isCreatingPlaylist ? '#888' : '#2ecc71',
+              color: 'white',
+              fontSize: '20px',
+              padding: '10px 30px',
+              margin: '10px 0',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: isCreatingPlaylist ? 'not-allowed' : 'pointer',
+              opacity: isCreatingPlaylist ? 0.6 : 1
+            }}
+          >
+            {isCreatingPlaylist ? 'Creating Playlist...' : 'Create Playlist'}
           </button>
+          
+          {isCreatingPlaylist && (
+            <div style={{ textAlign: 'center', marginTop: '10px', marginBottom: '20px' }}>
+              <h3 style={{ marginBottom: '10px' }}>Creating your playlist...</h3>
+              <img
+                src="/loading.gif"
+                alt="Loading"
+                style={{
+                  width: '100px',
+                  height: '100px',
+                  display: 'block',
+                  margin: '0 auto'
+                }}
+              />
+            </div>
+          )}
+          
           <p style={{ textAlign: 'center', maxWidth: '80%', margin: '20px 0' }}>
             Your Playlist is Waiting to be Created!
           </p>
