@@ -61,7 +61,7 @@ def callback(request: Request, code: str):
         return {"error": response.json()}
 
     token_data = response.json()
-    # Get user's Spotify ID
+    # Get user's Spotify ID and info
     access_token = token_data["access_token"]
     headers = {"Authorization": f"Bearer {access_token}"}
     user_response = requests.get("https://api.spotify.com/v1/me", headers=headers)
@@ -69,18 +69,23 @@ def callback(request: Request, code: str):
     if user_response.status_code != 200:
         return {"error": "❌ Failed to retrieve user info from Spotify."}
 
-    user_id = user_response.json()["id"]
+    user_data = user_response.json()
+    user_id = user_data["id"]
+    user_name = user_data.get("display_name")
+    user_email = user_data.get("email")
 
     # Calculate token expiry
     expires_in = token_data.get("expires_in", 3600)
     expires_at = datetime.utcnow() + timedelta(seconds=expires_in)
 
-    # Save to DB
+    # Save to DB with user info
     save_tokens_to_db(
         user_id=user_id,
         access_token=token_data["access_token"],
         refresh_token=token_data["refresh_token"],
-        expires_at=expires_at
+        expires_at=expires_at,
+        user_name=user_name,
+        user_email=user_email
     )
 
     logger.info(f"✅ Redirecting user_id to frontend.")
