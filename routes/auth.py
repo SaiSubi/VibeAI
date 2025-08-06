@@ -74,19 +74,37 @@ def callback(request: Request, code: str):
     user_name = user_data.get("display_name")
     user_email = user_data.get("email")
 
+    # Debug logging
+    logger.info(f"🔍 Spotify user data received: {user_data}")
+    logger.info(f"🔍 User ID: {user_id}")
+    logger.info(f"🔍 User name: {user_name}")
+    logger.info(f"🔍 User email: {user_email}")
+    logger.info(f"🔍 Available fields in user_data: {list(user_data.keys())}")
+
     # Calculate token expiry
     expires_in = token_data.get("expires_in", 3600)
     expires_at = datetime.utcnow() + timedelta(seconds=expires_in)
 
     # Save to DB with user info
-    save_tokens_to_db(
-        user_id=user_id,
-        access_token=token_data["access_token"],
-        refresh_token=token_data["refresh_token"],
-        expires_at=expires_at,
-        user_name=user_name,
-        user_email=user_email
-    )
+    try:
+        save_tokens_to_db(
+            user_id=user_id,
+            access_token=token_data["access_token"],
+            refresh_token=token_data["refresh_token"],
+            expires_at=expires_at,
+            user_name=user_name,
+            user_email=user_email
+        )
+        logger.info(f"✅ Successfully saved user info to database for {user_id}")
+    except Exception as e:
+        logger.error(f"❌ Error saving user info to database: {e}")
+        # Still save tokens even if user info fails
+        save_tokens_to_db(
+            user_id=user_id,
+            access_token=token_data["access_token"],
+            refresh_token=token_data["refresh_token"],
+            expires_at=expires_at
+        )
 
     logger.info(f"✅ Redirecting user_id to frontend.")
     redirect = RedirectResponse(url=f"{FRONTEND_URL}/home?user_id={user_id}")
