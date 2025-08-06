@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useEffect } from "react";
-import { recommendVibe } from "../api";
+import { recommendVibe, logoutUser } from "../api";
 import { useNavigate } from "react-router-dom";
 
 function Home() {
@@ -8,6 +8,7 @@ function Home() {
   const [myMusic, setMyMusic] = useState(true);
   const [newMusic, setNewMusic] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [recommendedText, setRecommendedText] = useState("");
   const navigate = useNavigate();
 
@@ -20,28 +21,28 @@ function Home() {
     }
   }, []);
 
-  /*
-  const toggleMyMusic = () => {
-    if (!myMusic) {
-      setMyMusic(true);
-      setNewMusic(false);
-    } else {
-      setMyMusic(false);
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      await logoutUser();
+      navigate('/');
+    } catch (error) {
+      console.error("Error during logout:", error);
+      navigate('/');
+    } finally {
+      setIsLoggingOut(false);
     }
   };
-
-  const toggleNewMusic = () => {
-    if (!newMusic) {
-      setNewMusic(true);
-      setMyMusic(false);
-    } else {
-      setNewMusic(false);
-    }
-  };
-  */
 
   return (
-    <>
+    <div style={{
+      backgroundColor: "#121212",
+      color: "white",
+      fontFamily: "sans-serif",
+      minHeight: "100vh",
+      padding: "20px",
+      textAlign: "center"
+    }}>
       <style>
         {`
         .switch {
@@ -90,95 +91,48 @@ function Home() {
         }
         `}
       </style>
-      <div style={{
-        backgroundColor: "#121212",
-        color: "white",
-        fontFamily: "sans-serif",
-        minHeight: "100vh",
-        padding: "20px",
-        textAlign: "center"
-      }}>
-        <img src="/logo.png" alt="VibeAI Logo" style={{ width: "100px", margin: "0 auto" }} />
-        <h2>Welcome User! Ready to Vibe?</h2>
+      
+      <img src="/logo.png" alt="VibeAI Logo" style={{ width: "150px", marginBottom: "10px" }} />
+      <h1 style={{ marginBottom: "20px" }}>Welcome to VibeAI</h1>
+      <p style={{ marginBottom: "30px", fontSize: "18px" }}>
+        Tell me your mood and I'll create a playlist for you! 🎵
+      </p>
 
-        <div style={{ display: "flex", justifyContent: "center", gap: "10px", margin: "20px 0" }}>
-          <textarea
-            placeholder="Tell me your vibe here"
-            value={userPrompt}
-            onChange={(e) => setUserPrompt(e.target.value)}
-            disabled={isLoading}
-            style={{
-              width: "300px",
-              height: "200px",
-              backgroundColor: "#ddd",
-              color: "black",
-              border: "none",
-              padding: "10px",
-              resize: "none"
-            }}
-          />
-          {/*
-          <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", gap: "10px", alignItems: "flex-start" }}>
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", color: "white" }}>
-              <span>My Music</span>
-              <label className="switch">
-                <input
-                  type="checkbox"
-                  checked={myMusic}
-                  onChange={() => {
-                    if (!myMusic) {
-                      setMyMusic(true);
-                      setNewMusic(false);
-                    } else {
-                      setMyMusic(false);
-                    }
-                  }}
-                  disabled={isLoading}
-                />
-                <span className="slider round"></span>
-              </label>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", color: "white" }}>
-              <span>New Music</span>
-              <label className="switch">
-                <input
-                  type="checkbox"
-                  checked={newMusic}
-                  onChange={() => {
-                    if (!newMusic) {
-                      setNewMusic(true);
-                      setMyMusic(false);
-                    } else {
-                      setNewMusic(false);
-                    }
-                  }}
-                  disabled={isLoading}
-                />
-                <span className="slider round"></span>
-              </label>
-            </div>
-          */}
-            <button
-              onClick={() => setUserPrompt("")}
-              disabled={isLoading}
-              style={{
-                backgroundColor: "#888",
-                color: "white",
-                border: "none",
-                padding: "6px 12px",
-                borderRadius: "10px",
-                marginTop: "10px",
-                fontSize: "12px",
-                cursor: isLoading ? "not-allowed" : "pointer",
-                opacity: isLoading ? 0.6 : 1
-              }}
-            >
-              Clear Text
-            </button>
-          {/* 
-          </div>
-          */}
-        </div>
+      <div style={{ marginBottom: "20px" }}>
+        <textarea
+          value={userPrompt}
+          onChange={(e) => setUserPrompt(e.target.value)}
+          placeholder="Describe your mood or what you want to listen to..."
+          style={{
+            width: "90%",
+            maxWidth: "500px",
+            height: "100px",
+            padding: "10px",
+            fontSize: "16px",
+            borderRadius: "5px",
+            border: "1px solid #ccc",
+            resize: "none"
+          }}
+        />
+      </div>
+
+      <button
+        onClick={() => setUserPrompt("")}
+        disabled={isLoading}
+        style={{
+          backgroundColor: "#888",
+          color: "white",
+          border: "none",
+          padding: "6px 12px",
+          borderRadius: "10px",
+          marginTop: "10px",
+          fontSize: "12px",
+          cursor: isLoading ? "not-allowed" : "pointer",
+          opacity: isLoading ? 0.6 : 1
+        }}
+      >
+        Clear Text
+      </button>
 
       <button
         onClick={async () => {
@@ -228,7 +182,7 @@ function Home() {
       <h3>Get Inspired & Play with</h3>
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", marginTop: "10px" }}>
         <div
-          onClick={() => setUserPrompt("I just met someone new! Can you play Arijit Singh’s and Shreya Ghosal’s falling in love songs?")}
+          onClick={() => setUserPrompt("I just met someone new! Can you play Arijit Singh's and Shreya Ghosal's falling in love songs?")}
           style={{
             backgroundColor: "#eee",
             color: "#000",
@@ -242,7 +196,7 @@ function Home() {
             cursor: "pointer"
           }}
         >
-          I just met someone new! Can you play Arijit Singh’s and Shreya Ghosal’s falling in love songs?
+          I just met someone new! Can you play Arijit Singh's and Shreya Ghosal's falling in love songs?
         </div>
         <div
           onClick={() => setUserPrompt("I have a tough exam coming up, I need motivation, I feel Battle Symphony, Unstoppable, give me more?")}
@@ -279,7 +233,7 @@ function Home() {
           I have my school friends over and we used to play a lot of fifa, can you play some of the best fifa songs?
         </div>
         <div
-          onClick={() => setUserPrompt("I love slow melodious Indian songs like SPB’s and Arijit’s, can you give me something similar in english?")}
+          onClick={() => setUserPrompt("I love slow melodious Indian songs like SPB's and Arijit's, can you give me something similar in english?")}
           style={{
             backgroundColor: "#eee",
             color: "#000",
@@ -293,32 +247,31 @@ function Home() {
             cursor: "pointer"
           }}
         >
-          I love slow melodious Indian songs like SPB’s and Arijit’s, can you give me something similar in english?
+          I love slow melodious Indian songs like SPB's and Arijit's, can you give me something similar in english?
         </div>
       </div>
 
       <button
-        onClick={() => navigate("/")}
-        disabled={isLoading}
+        onClick={handleLogout}
+        disabled={isLoading || isLoggingOut}
         style={{
           marginTop: "20px",
           padding: "6px 16px",
           borderRadius: "4px",
-          backgroundColor: "white",
-          color: "#000",
+          backgroundColor: isLoggingOut ? "#888" : "white",
+          color: isLoggingOut ? "white" : "#000",
           border: "1px solid #ccc",
-          opacity: isLoading ? 0.6 : 1,
-          cursor: isLoading ? "not-allowed" : "pointer"
+          opacity: (isLoading || isLoggingOut) ? 0.6 : 1,
+          cursor: (isLoading || isLoggingOut) ? "not-allowed" : "pointer"
         }}
       >
-        Logout
+        {isLoggingOut ? "Logging Out..." : "Logout"}
       </button>
 
       <footer style={{ marginTop: "30px", fontSize: "12px", color: "#ccc" }}>
         Made by Sai Subramanian. Hope you Enjoy:)
       </footer>
-      </div>
-    </>
+    </div>
   );
 }
 

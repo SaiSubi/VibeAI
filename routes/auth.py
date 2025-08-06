@@ -9,7 +9,7 @@ from utils.config import (
     SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET,
     SPOTIFY_REDIRECT_URI, FRONTEND_URL
 )
-from utils.db import save_tokens_to_db, get_tokens_for_user
+from utils.db import save_tokens_to_db, get_tokens_for_user, logout_user_from_db, check_user_registered
 import logging
 from utils.token import refresh_access_token
 
@@ -103,6 +103,19 @@ def check_refresh_token(user_id: Optional[str] = None):
         logger.error(f"❌ Error checking refresh token: {e}")
         return {"valid": False}
 
+@router.get("/check_user_registered")
+def check_user_registered_endpoint(user_id: Optional[str] = None):
+    if not user_id:
+        logger.warning("❌ No user_id provided.")
+        return {"registered": False}
+
+    try:
+        is_registered = check_user_registered(user_id)
+        logger.info(f"✅ User {user_id} registration check: {is_registered}")
+        return {"registered": is_registered}
+    except Exception as e:
+        logger.error(f"❌ Error checking user registration: {e}")
+        return {"registered": False}
 
 @router.post("/refresh_token")
 def refresh_token_endpoint(payload: dict = Body(...)):
@@ -112,3 +125,33 @@ def refresh_token_endpoint(payload: dict = Body(...)):
 
     result = refresh_access_token(user_id)
     return JSONResponse(content=result)
+
+# ──────────────────────────────────────────────
+# 🚪 Logout Route: Remove User Tokens
+# ──────────────────────────────────────────────
+@router.post("/logout")
+def logout_user(payload: dict = Body(...)):
+    user_id = payload.get("user_id")
+    if not user_id:
+        return JSONResponse(content={"error": "❌ No user_id provided"}, status_code=400)
+
+    try:
+        success = logout_user_from_db(user_id)
+        if success:
+            logger.info(f"✅ Successfully logged out user: {user_id}")
+            return JSONResponse(content={
+                "message": "✅ Successfully logged out",
+                "success": True
+            })
+        else:
+            logger.warning(f"⚠️ User not found for logout: {user_id}")
+            return JSONResponse(content={
+                "message": "⚠️ User not found",
+                "success": False
+            })
+    except Exception as e:
+        logger.error(f"❌ Error during logout: {e}")
+        return JSONResponse(content={
+            "error": "❌ Error during logout",
+            "success": False
+        }, status_code=500)

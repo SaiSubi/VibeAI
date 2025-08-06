@@ -122,3 +122,46 @@ export const refreshAccessToken = async (userId) => {
     return { error: "Failed to refresh access token" };
   }
 };
+
+// 🚪 Logout user by removing their tokens from the database
+export const logoutUser = async () => {
+  try {
+    const userId = getUserId();
+    if (!userId) {
+      console.log("No user ID found in localStorage.");
+      return { success: false, message: "No user ID found" };
+    }
+    
+    const response = await axios.post(`${BASE_URL}/logout`, { user_id: userId });
+    console.log("✅ Logout response:", response.data);
+    
+    // Clear user data from localStorage
+    localStorage.removeItem("user_id");
+    localStorage.removeItem("vibeai_access_key");
+    
+    return response.data;
+  } catch (error) {
+    console.error("Error during logout:", error);
+    // Still clear localStorage even if backend call fails
+    localStorage.removeItem("user_id");
+    localStorage.removeItem("vibeai_access_key");
+    return { success: false, error: "Failed to logout" };
+  }
+};
+
+// 🔍 Check if a user is registered with Spotify (for auto-login)
+export const checkUserRegistered = async (userId) => {
+  try {
+    if (!userId) {
+      console.log("No user ID provided for registration check.");
+      return { registered: false };
+    }
+    
+    const response = await axios.get(`${BASE_URL}/check_user_registered?user_id=${userId}`);
+    console.log("✅ User registration check response:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Error checking user registration:", error);
+    return { registered: false };
+  }
+};

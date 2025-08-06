@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { createPlaylistFromGroq, BASE_URL } from '../api'; 
+import { createPlaylistFromGroq, logoutUser, BASE_URL } from '../api'; 
 
 function Results() {
   const [isPlaylistCreated, setIsPlaylistCreated] = useState(false);
   const [playlistUrl, setPlaylistUrl] = useState('');
   const [isCreatingPlaylist, setIsCreatingPlaylist] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   console.log("useLocation() in Results:", location);
@@ -19,6 +20,19 @@ function Results() {
       console.warn("⚠️ No recommendation text found in location state.");
     }
   }, [location.state]);
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      await logoutUser();
+      navigate('/');
+    } catch (error) {
+      console.error("Error during logout:", error);
+      navigate('/');
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
 
   return (
     <div style={{ 
@@ -143,17 +157,18 @@ function Results() {
         New Vibe
       </button>
 
-      <button onClick={() => navigate('/')} style={{ 
-        backgroundColor: 'white', 
-        color: 'black', 
+      <button onClick={handleLogout} disabled={isLoggingOut} style={{ 
+        backgroundColor: isLoggingOut ? '#888' : 'white', 
+        color: isLoggingOut ? 'white' : 'black', 
         fontSize: '14px', 
         padding: '5px 15px', 
         marginBottom: '10px',
         border: 'none',
         borderRadius: '4px',
-        cursor: 'pointer'
+        cursor: isLoggingOut ? 'not-allowed' : 'pointer',
+        opacity: isLoggingOut ? 0.6 : 1
       }}>
-        Logout
+        {isLoggingOut ? 'Logging Out...' : 'Logout'}
       </button>
 
       <footer style={{ fontSize: '12px', marginTop: 'auto' }}>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Button,
@@ -6,14 +6,47 @@ import {
   Text,
   VStack,
   Image,
-  HStack
+  HStack,
+  Spinner
 } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
+import { checkUserRegistered } from '../api';
 
 const Personal = () => {
   const [accessKey, setAccessKey] = useState('');
   const [error, setError] = useState('');
+  const [isCheckingUser, setIsCheckingUser] = useState(true);
+  const [showModeChoice, setShowModeChoice] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    checkExistingUser();
+  }, []);
+
+  const checkExistingUser = async () => {
+    try {
+      const userId = localStorage.getItem("user_id");
+      if (userId) {
+        console.log("🔍 Checking if user is registered:", userId);
+        const response = await checkUserRegistered(userId);
+        
+        if (response.registered) {
+          console.log("✅ User is registered, redirecting to personalized home");
+          navigate("/home");
+          return;
+        } else {
+          console.log("❌ User not registered or tokens expired");
+          // Clear invalid user_id
+          localStorage.removeItem("user_id");
+        }
+      }
+    } catch (error) {
+      console.error("Error checking existing user:", error);
+    } finally {
+      setIsCheckingUser(false);
+      setShowModeChoice(true);
+    }
+  };
 
   const handlePersonalizedAccess = () => {
     const validKey = "vibeaiforyou"; // Replace with your actual secret
@@ -25,6 +58,41 @@ const Personal = () => {
       setError("❌ Invalid access key. Please try again.");
     }
   };
+
+  // Show loading screen while checking user
+  if (isCheckingUser) {
+    return (
+      <Box
+        minH="100vh"
+        bg="black"
+        color="white"
+        display="flex"
+        flexDirection="column"
+        alignItems="center"
+        justifyContent="center"
+        px={4}
+      >
+        <VStack spacing={6} textAlign="center">
+          <Image src="/logo.png" alt="VibeAI Logo" boxSize="100px" />
+          <Text fontSize="xl" fontWeight="bold">
+            Welcome back to VibeAI
+          </Text>
+          <Text fontSize="md" color="gray.300">
+            Checking your login status...
+          </Text>
+          <Spinner size="xl" color="green.400" />
+          <Text fontSize="sm" color="gray.400">
+            Please wait while we verify your account
+          </Text>
+        </VStack>
+      </Box>
+    );
+  }
+
+  // Show mode choice after checking user
+  if (!showModeChoice) {
+    return null;
+  }
 
   return (
     <Box
@@ -82,6 +150,17 @@ const Personal = () => {
             Send an email to <strong>vibeai16@gmail.com</strong> with your name and email ID linked to Spotify and I will add you as a user and share the access key.
           </Text>
         </VStack>
+
+        {/* Mode Change Button */}
+        <Button
+          size="md"
+          colorScheme="orange"
+          width="200px"
+          onClick={() => navigate("/homegen")}
+          mt={4}
+        >
+          Switch to General Mode 🔄
+        </Button>
       </VStack>
 
       <Text fontSize="sm" mt={12}>
