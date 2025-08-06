@@ -150,17 +150,6 @@ const Personal = () => {
             Send an email to <strong>vibeai16@gmail.com</strong> with your name and email ID linked to Spotify and I will add you as a user and share the access key.
           </Text>
         </VStack>
-
-        {/* Mode Change Button */}
-        <Button
-          size="md"
-          colorScheme="orange"
-          width="200px"
-          onClick={() => navigate("/homegen")}
-          mt={4}
-        >
-          Switch to General Mode 🔄
-        </Button>
       </VStack>
 
       <Text fontSize="sm" mt={12}>

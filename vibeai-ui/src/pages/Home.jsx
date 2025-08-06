@@ -41,7 +41,11 @@ function Home() {
       fontFamily: "sans-serif",
       minHeight: "100vh",
       padding: "20px",
-      textAlign: "center"
+      textAlign: "center",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "flex-start"
     }}>
       <style>
         {`
@@ -92,26 +96,28 @@ function Home() {
         `}
       </style>
       
-      <img src="/logo.png" alt="VibeAI Logo" style={{ width: "150px", marginBottom: "10px" }} />
-      <h1 style={{ marginBottom: "20px" }}>Welcome to VibeAI</h1>
-      <p style={{ marginBottom: "30px", fontSize: "18px" }}>
+      <img src="/logo.png" alt="VibeAI Logo" style={{ width: "150px", marginBottom: "20px", marginTop: "20px" }} />
+      <h1 style={{ marginBottom: "20px", fontSize: "2rem" }}>Welcome to VibeAI</h1>
+      <p style={{ marginBottom: "30px", fontSize: "18px", maxWidth: "600px" }}>
         Tell me your mood and I'll create a playlist for you! 🎵
       </p>
 
-      <div style={{ marginBottom: "20px" }}>
+      <div style={{ marginBottom: "20px", width: "100%", maxWidth: "500px" }}>
         <textarea
           value={userPrompt}
           onChange={(e) => setUserPrompt(e.target.value)}
           placeholder="Describe your mood or what you want to listen to..."
           style={{
-            width: "90%",
-            maxWidth: "500px",
+            width: "100%",
             height: "100px",
-            padding: "10px",
+            padding: "15px",
             fontSize: "16px",
-            borderRadius: "5px",
-            border: "1px solid #ccc",
-            resize: "none"
+            borderRadius: "8px",
+            border: "2px solid #ccc",
+            resize: "none",
+            backgroundColor: "white",
+            color: "black",
+            fontFamily: "inherit"
           }}
         />
       </div>
@@ -123,10 +129,10 @@ function Home() {
           backgroundColor: "#888",
           color: "white",
           border: "none",
-          padding: "6px 12px",
+          padding: "8px 16px",
           borderRadius: "10px",
           marginTop: "10px",
-          fontSize: "12px",
+          fontSize: "14px",
           cursor: isLoading ? "not-allowed" : "pointer",
           opacity: isLoading ? 0.6 : 1
         }}
@@ -152,19 +158,22 @@ function Home() {
           backgroundColor: isLoading ? "#888" : "#1DB954",
           color: "white",
           border: "none",
-          padding: "10px 30px",
+          padding: "15px 30px",
           fontSize: "18px",
           fontWeight: "bold",
-          borderRadius: "5px",
+          borderRadius: "8px",
+          marginTop: "20px",
           marginBottom: "20px",
-          cursor: isLoading ? "not-allowed" : "pointer"
+          cursor: isLoading ? "not-allowed" : "pointer",
+          width: "100%",
+          maxWidth: "300px"
         }}
       >
         Recommend Songs
       </button>
 
       {isLoading && (
-        <div style={{ textAlign: "center", marginTop: "10px", marginBottom: "30px" }}>
+        <div style={{ textAlign: "center", marginTop: "20px", marginBottom: "30px" }}>
           <h3 style={{ marginBottom: "10px" }}>Loading..........</h3>
           <img
             src="/loading.gif"
@@ -179,21 +188,21 @@ function Home() {
         </div>
       )}
 
-      <h3>Get Inspired & Play with</h3>
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", marginTop: "10px" }}>
+      <h3 style={{ marginTop: "30px", marginBottom: "15px" }}>Get Inspired & Play with</h3>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", marginTop: "10px", width: "100%", maxWidth: "500px" }}>
         <div
           onClick={() => setUserPrompt("I just met someone new! Can you play Arijit Singh's and Shreya Ghosal's falling in love songs?")}
           style={{
             backgroundColor: "#eee",
             color: "#000",
-            padding: "10px",
+            padding: "15px",
             borderRadius: "10px",
             width: "100%",
-            maxWidth: "500px",
             margin: "0 auto",
             wordWrap: "break-word",
             whiteSpace: "normal",
-            cursor: "pointer"
+            cursor: "pointer",
+            fontSize: "14px"
           }}
         >
           I just met someone new! Can you play Arijit Singh's and Shreya Ghosal's falling in love songs?
@@ -203,14 +212,14 @@ function Home() {
           style={{
             backgroundColor: "#eee",
             color: "#000",
-            padding: "10px",
+            padding: "15px",
             borderRadius: "10px",
             width: "100%",
-            maxWidth: "500px",
             margin: "0 auto",
             wordWrap: "break-word",
             whiteSpace: "normal",
-            cursor: "pointer"
+            cursor: "pointer",
+            fontSize: "14px"
           }}
         >
           I have a tough exam coming up, I need motivation, I feel Battle Symphony, Unstoppable, give me more?
@@ -220,14 +229,14 @@ function Home() {
           style={{
             backgroundColor: "#eee",
             color: "#000",
-            padding: "10px",
+            padding: "15px",
             borderRadius: "10px",
             width: "100%",
-            maxWidth: "500px",
             margin: "0 auto",
             wordWrap: "break-word",
             whiteSpace: "normal",
-            cursor: "pointer"
+            cursor: "pointer",
+            fontSize: "14px"
           }}
         >
           I have my school friends over and we used to play a lot of fifa, can you play some of the best fifa songs?
@@ -237,14 +246,14 @@ function Home() {
           style={{
             backgroundColor: "#eee",
             color: "#000",
-            padding: "10px",
+            padding: "15px",
             borderRadius: "10px",
             width: "100%",
-            maxWidth: "500px",
             margin: "0 auto",
             wordWrap: "break-word",
             whiteSpace: "normal",
-            cursor: "pointer"
+            cursor: "pointer",
+            fontSize: "14px"
           }}
         >
           I love slow melodious Indian songs like SPB's and Arijit's, can you give me something similar in english?
@@ -255,14 +264,15 @@ function Home() {
         onClick={handleLogout}
         disabled={isLoading || isLoggingOut}
         style={{
-          marginTop: "20px",
-          padding: "6px 16px",
-          borderRadius: "4px",
+          marginTop: "30px",
+          padding: "8px 20px",
+          borderRadius: "6px",
           backgroundColor: isLoggingOut ? "#888" : "white",
           color: isLoggingOut ? "white" : "#000",
           border: "1px solid #ccc",
           opacity: (isLoading || isLoggingOut) ? 0.6 : 1,
-          cursor: (isLoading || isLoggingOut) ? "not-allowed" : "pointer"
+          cursor: (isLoading || isLoggingOut) ? "not-allowed" : "pointer",
+          fontSize: "14px"
         }}
       >
         {isLoggingOut ? "Logging Out..." : "Logout"}

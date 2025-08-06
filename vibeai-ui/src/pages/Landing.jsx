@@ -88,6 +88,18 @@ const Landing = () => {
         </Button>
       </VStack>
 
+      {/* Mode Change Button */}
+      <Button
+        bg="#f39c12"
+        color="white"
+        size="md"
+        _hover={{ bg: "#e67e22" }}
+        onClick={() => navigate("/homegen")}
+        mb={4}
+      >
+        Switch to General Mode 🔄
+      </Button>
+
       <Text fontSize="sm" mt={8} mb={2}>
         Made by Sai Subramanian. Hope you Enjoy:)
       </Text>
