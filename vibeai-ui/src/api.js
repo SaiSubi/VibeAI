@@ -9,7 +9,7 @@ const getUserId = () => {
 };
 
 // 🌐 Base URL of the backend API
-export const BASE_URL = process.env.Backend_API_URL || "http://localhost:8000"; // Use environment variable with fallback
+export const BASE_URL = process.env.Backend_API_URL || "https://vibeai-backend-534228867297.us-west1.run.app" || "http://localhost:8000"; // Use environment variable with Cloud Run fallback
 // export const BASE_URL = "https://vibeai-backend.onrender.com"; // Render backend (old)
 // export const BASE_URL = "http://localhost:8000"; // Local development
 
