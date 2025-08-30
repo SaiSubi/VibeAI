@@ -9,8 +9,9 @@ const getUserId = () => {
 };
 
 // 🌐 Base URL of the backend API
-export const BASE_URL = "https://vibeai-backend.onrender.com"; // Updated to live backend
-// export const BASE_URL = "http://localhost:8000"; // Use this for local development
+export const BASE_URL = process.env.Backend_API_URL || "http://localhost:8000"; // Use environment variable with fallback
+// export const BASE_URL = "https://vibeai-backend.onrender.com"; // Render backend (old)
+// export const BASE_URL = "http://localhost:8000"; // Local development
 
 // ✅ Check if the backend is live and responsive
 export const getHealth = async () => {
