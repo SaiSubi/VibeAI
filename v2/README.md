@@ -1,117 +1,185 @@
-# VibeAI v2 Development
+# VibeAI v2 - Song Manager
 
-This folder contains the core files for VibeAI v2 development.
+A clean, modular system for managing song databases, analyzing songs with AI, and searching with natural language.
 
-## Files
+## 🎵 Features
 
-### `build_database.py` (formerly `test.py`)
-- Main script for building the enhanced song database
-- Fetches user playlists and tracks from Spotify
-- Retrieves audio features (when working)
-- Saves song metadata to SQLite database
-- Handles duplicate detection and error logging
+### Core Functions
+- **Song Analysis**: Use Google Gemini Flash to analyze songs for energy, emotions, themes, and more
+- **Playlist Import**: Import songs from Spotify playlists with duplicate detection
+- **Playlist URL Import**: Import songs from any Spotify playlist by URL
+- **Batch Processing**: Analyze multiple songs with rate limiting
+- **Duplicate Management**: Find and remove duplicate songs
+- **Natural Language Search**: Search songs using conversational queries based on database attributes
 
-### `query_database.py` (formerly `query_db.py`)
-- Script to query and explore the created song database
-- Functions to search by mood, artist, and lyrical themes
-- Database statistics and analysis
-- Example queries for testing
+### Database Schema
+The system stores comprehensive song data including:
+- Basic info (title, artist, album, year)
+- Spotify audio features (energy, danceability, tempo, etc.)
+- AI analysis (emotions, themes, language, genre)
+- Custom scores (popularity, melodic expressiveness, etc.)
 
-### `batch_analyze_songs.py` (NEW)
-- Batch song analysis helper for ChatGPT integration
-- Extracts songs in manageable batches (25 songs)
-- Formats songs for ChatGPT analysis with structured prompts
-- Parses ChatGPT JSON responses and updates database
-- Tracks analysis progress
+## 🚀 Quick Start
 
-### `interactive_analysis.py` (NEW)
-- Interactive script for pasting ChatGPT responses directly
-- No need to save files - paste responses directly
-- Real-time database updates
-- Progress tracking and preview of analyses
+### 1. Basic Usage
+```python
+from song_manager import SongManager
 
-### `view_analysis.py` (NEW)
-- View and explore analyzed songs
-- Search by emotion, energy level, genre, and lyrical themes
-- Statistics on analysis distribution
-- Interactive querying of results
+# Initialize manager
+manager = SongManager()
 
-## Database
+# Show database stats
+stats = manager.get_database_stats()
+print(f"Total songs: {stats['total_songs']}")
 
-The script creates `song_database.db` (SQLite) with the following schema:
-- `songs` table with song metadata and Spotify features
-- Currently contains 410+ songs from your playlists
-- Audio features column is empty due to API 403 error
-
-## Usage
-
-```bash
-# Build the database
-python v2/build_database.py
-
-# Query the database
-python v2/query_database.py
-
-# Batch analyze songs with ChatGPT
-python v2/batch_analyze_songs.py
-
-# Interactive analysis (paste ChatGPT responses directly)
-python v2/interactive_analysis.py
-
-# View analysis results
-python v2/view_analysis.py
+# Analyze 10 unanalyzed songs
+results = manager.analyze_playlist_songs(limit=10)
 ```
 
-## ChatGPT Analysis Workflow
-
-1. **Get a batch of songs to analyze:**
-   ```bash
-   python v2/batch_analyze_songs.py
-   ```
-
-2. **Copy the generated prompt to ChatGPT**
-
-3. **Paste ChatGPT's response back:**
-   ```bash
-   python v2/interactive_analysis.py
-   # Choose option 2 and paste the response
-   ```
-
-4. **View your analyzed songs:**
-   ```bash
-   python v2/view_analysis.py
-   ```
-
-**Or use file-based approach:**
+### 2. CLI Interface
 ```bash
-# Save ChatGPT response to file
-python v2/batch_analyze_songs.py --parse chatgpt_response.txt
+python cli.py
 ```
 
-## Current Status
+### 3. Natural Language Search
+```python
+from song_search import SongSearchEngine
 
-- ✅ Database building works (410+ songs)
-- ✅ Playlist fetching works
-- ✅ ChatGPT analysis workflow ready
-- ❌ Audio features return 403 error
-- 🔄 Ready for agentic filtering system development
+search_engine = SongSearchEngine()
+songs = search_engine.search_with_natural_language("happy energetic songs")
+```
 
-## Analysis Features
+### 4. Import Playlist from URL
+```python
+# Import any Spotify playlist by URL
+results = manager.get_playlist_from_url("https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M")
 
-The system analyzes songs for multiple key traits:
+# Or use playlist ID directly
+results = manager.get_playlist_from_url("37i9dQZF1DXcBWIGoYBM5M")
+```
 
-1. **Energy Level**: Numerical score 0-10 (0=very low energy, 10=very high energy)
-2. **Emotion Vector**: Numerical vector [Happy, Sad, Angry] with scores 0-10 (10 being strongest)
-3. **Language**: Primary language of the song (English, Tamil, Hindi, Telugu, Malayalam, Kannada, Punjabi, etc.)
-4. **Genre**: Primary musical genre (Pop, Rock, Hip-Hop, R&B, Electronic, Country, Jazz, Classical, Folk, Indie, Bollywood, Tamil Film, etc.)
-5. **Danceability Score**: How easy it is to dance to this song (0-10, where 10=very danceable)
-6. **Lyrical Themes**: 27 specific themes including Hopeful Love, In Love, Lust, Toxic Relationship, Flirty, Longing, Breakup, Friendship, Family, Feel Good, Celebrating Life, Carefree, Escape from Life, Unhappy with life, Dreaming, Motivational, Reassuring, Confident, Insecure, Love Myself, Hate Myself, Reflection/Introspection, Nostalgia, Adventure, Home, Solitude, Spirituality
-7. **Theme Scores**: For each selected theme, a score 1-10 indicating how strongly it applies
-8. **Popularity Score**: Song's popularity from 1-10 (1=obscure, 10=global hit)
+## 📁 File Structure
 
-## Next Steps
+```
+v2/
+├── song_manager.py      # Core functionality
+├── song_search.py       # Natural language search
+├── cli.py              # Command line interface
+├── test_recommendations.py  # Test script for recommendations
+├── song_database.db    # SQLite database
+└── README.md           # This file
+```
 
-1. ✅ Add lyrical themes via ChatGPT analysis (WORKFLOW READY)
-2. Build agentic filtering system using analyzed data
-3. Resolve audio features API issue
-4. Integrate with main VibeAI application 
+## 🔧 Core Functions
+
+### SongManager Class
+
+#### `analyze_song_with_gemini(title, artist)`
+Analyze a single song using Gemini API
+- Returns: (analysis_data, error_message)
+
+#### `analyze_playlist_songs(playlist_name=None, limit=50)`
+Analyze multiple songs with rate limiting
+- Handles rate limiting (10 requests/minute)
+- Shows progress and statistics
+
+#### `import_playlist_from_spotify(user_id=None, playlist_names=None)`
+Import songs from Spotify playlists
+- Automatically detects and skips duplicates
+- Gets audio features from Spotify API
+
+#### `find_duplicates()`
+Find duplicate songs in database
+- Groups by title and artist (case-insensitive)
+
+#### `remove_duplicates(keep_analyzed=True)`
+Remove duplicate songs
+- Option to keep analyzed versions
+
+#### `get_playlist_from_url(playlist_url)`
+Import songs from any Spotify playlist by URL
+- Accepts full Spotify URLs or playlist IDs
+- Automatically extracts playlist ID from URL
+- Gets audio features and saves to database
+
+### SongSearchEngine Class
+
+#### `search_with_natural_language(query)`
+Convert natural language to database search
+- Examples:
+  - "happy energetic songs"
+  - "sad breakup songs in Hindi"
+  - "danceable Bollywood songs"
+  - "songs by A.R. Rahman"
+
+## 🎯 Example Queries
+
+### Natural Language Search
+- "I want happy, energetic songs"
+- "Sad breakup songs in Hindi"
+- "Danceable Bollywood songs"
+- "Songs by A.R. Rahman"
+- "Slow romantic songs"
+- "Motivational workout songs"
+
+### CLI Commands
+1. Show database stats
+2. Import playlist from Spotify
+3. Import playlist from URL
+4. Analyze unanalyzed songs
+5. Find duplicates
+6. Remove duplicates
+7. Search songs (natural language)
+8. Exit
+
+## 🔄 Workflow
+
+1. **Import**: Use `import_playlist_from_spotify()` to add songs
+2. **Analyze**: Use `analyze_playlist_songs()` to analyze with AI
+3. **Search**: Use natural language search to find songs
+4. **Maintain**: Use duplicate detection and removal as needed
+
+## ⚙️ Configuration
+
+The system uses environment variables from `utils/config.py`:
+- `Gemini_API_KEY`: For song analysis
+- `SPOTIFY_CLIENT_ID`: For Spotify API access
+- `SPOTIFY_CLIENT_SECRET`: For Spotify API access
+- `VibeAI_userid`: Default user ID for Spotify
+
+## 📊 Database Stats
+
+The system tracks:
+- Total songs
+- Analyzed vs unanalyzed songs
+- Unique artists
+- Duplicate songs
+- Analysis progress
+
+## 🚨 Rate Limiting
+
+- Gemini API: 10 requests per minute (6-second delay)
+- Spotify API: Handled automatically
+- Progress shown during batch operations
+
+## 🔍 Search Capabilities
+
+The natural language search understands:
+- **Energy levels**: "energetic", "calm", "high energy"
+- **Emotions**: "happy", "sad", "angry"
+- **Languages**: "English", "Hindi", "Tamil"
+- **Genres**: "Pop", "Rock", "Bollywood"
+- **Themes**: "love", "breakup", "motivational"
+- **Attributes**: "danceable", "melodic", "acoustic"
+- **Artists**: "songs by [artist]"
+- **Time periods**: "songs from 2020"
+
+## 🛠️ Future Development
+
+The modular structure makes it easy to add:
+- New analysis features
+- Additional search capabilities
+- Different AI models
+- Export/import formats
+- Web interface
+- API endpoints

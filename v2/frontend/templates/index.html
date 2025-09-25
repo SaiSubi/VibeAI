@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VibeAI v2</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Left Sidebar -->
+        <div class="sidebar">
+            <div class="logo">
+                <div class="logo-icon">V</div>
+                <h1>VibeAI</h1>
+            </div>
+            
+            <div class="try-these">
+                <h3>TRY THESE</h3>
+                <div class="mood-buttons">
+                    <button class="mood-btn" data-query="happy energetic songs">
+                        <i class="fas fa-smile"></i>
+                        Happy
+                    </button>
+                    <button class="mood-btn" data-query="romantic love songs">
+                        <i class="fas fa-heart"></i>
+                        Falling in Love
+                    </button>
+                    <button class="mood-btn" data-query="motivational workout songs">
+                        <i class="fas fa-chart-line"></i>
+                        Motivational
+                    </button>
+                    <button class="mood-btn" data-query="sad melancholic songs">
+                        <i class="fas fa-frown"></i>
+                        Melancholy
+                    </button>
+                    <button class="mood-btn" data-query="party dance songs">
+                        <i class="fas fa-cocktail"></i>
+                        Party Time
+                    </button>
+                </div>
+            </div>
+
+            <!-- Default Playlists -->
+            <div class="default-playlists">
+                <h3>DEFAULT PLAYLISTS</h3>
+                <div class="playlist-buttons" id="playlistButtons">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Search Bar -->
+            <div class="search-container">
+                <div class="search-bar">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="Tell me your mood or what you want to listen to...">
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="filters">
+                <span class="filter-label">Filter by:</span>
+                <div class="filter-buttons">
+                    <button class="filter-btn" data-filter="artist">Artist</button>
+                    <button class="filter-btn" data-filter="release_date">Release Date</button>
+                    <button class="filter-btn" data-filter="genre">Genre</button>
+                    <button class="filter-btn" data-filter="emotion">Emotion</button>
+                    <button class="filter-btn" data-filter="energy">Energy</button>
+                    <button class="filter-btn" data-filter="tempo">Tempo</button>
+                    <button class="filter-btn" data-filter="danceability">Danceability</button>
+                    <button class="filter-btn" data-filter="lyrical_theme">Lyrical Theme</button>
+                </div>
+                <button class="clear-all-btn" id="clearAllFilters">
+                    <i class="fas fa-times"></i>
+                    Clear All Filters
+                </button>
+            </div>
+
+            <!-- Popularity Slider -->
+            <div class="popularity-container">
+                <span class="popularity-label">Popularity</span>
+                <div class="slider-container">
+                    <input type="range" id="popularitySlider" min="0" max="10" value="5" class="slider">
+                    <div class="slider-labels">
+                        <span>0</span>
+                        <span>10</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Playlist Header -->
+            <div class="playlist-header">
+                <h2 id="playlistTitle">Search Results</h2>
+                <button class="play-all-btn" id="playAllBtn">
+                    <i class="fas fa-play"></i>
+                    Play All
+                </button>
+            </div>
+
+            <!-- Results Container -->
+            <div class="results-container" id="resultsContainer">
+                <div class="loading" id="loadingIndicator" style="display: none;">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <span>Searching for your perfect songs...</span>
+                </div>
+                <div class="no-results" id="noResults" style="display: none;">
+                    <i class="fas fa-music"></i>
+                    <span>No songs found. Try adjusting your search or filters.</span>
+                </div>
+                <div class="tracks-list" id="tracksList">
+                    <!-- Tracks will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Modals -->
+    <div class="modal" id="filterModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Filter</h3>
+                <button class="close-btn" id="closeModal">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Filter content will be populated here -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="clearFilter">Clear This Filter</button>
+                <button class="btn-primary" id="applyFilter">Apply</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
