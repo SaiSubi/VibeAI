@@ -163,13 +163,41 @@ function Home() {
           fontWeight: "bold",
           borderRadius: "8px",
           marginTop: "20px",
-          marginBottom: "20px",
+          marginBottom: "10px",
           cursor: isLoading ? "not-allowed" : "pointer",
           width: "100%",
           maxWidth: "300px"
         }}
       >
         Recommend Songs
+      </button>
+
+      <button
+        onClick={() => navigate("/advanced-search")}
+        style={{
+          backgroundColor: "#333",
+          color: "white",
+          border: "2px solid #1DB954",
+          padding: "12px 25px",
+          fontSize: "16px",
+          fontWeight: "bold",
+          borderRadius: "8px",
+          marginBottom: "20px",
+          cursor: "pointer",
+          width: "100%",
+          maxWidth: "300px",
+          transition: "all 0.2s"
+        }}
+        onMouseOver={(e) => {
+          e.target.style.backgroundColor = "#1DB954";
+          e.target.style.borderColor = "#1DB954";
+        }}
+        onMouseOut={(e) => {
+          e.target.style.backgroundColor = "#333";
+          e.target.style.borderColor = "#1DB954";
+        }}
+      >
+        🚀 Try Advanced Search (v2)
       </button>
 
       {isLoading && (

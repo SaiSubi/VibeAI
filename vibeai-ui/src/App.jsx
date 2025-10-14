@@ -5,6 +5,7 @@ import Results from './pages/Results'
 import HomeGen from './pages/HomeGen'
 import ResultsGen from './pages/ResultsGen'
 import Personal from './pages/personal'
+import AdvancedSearch from './pages/AdvancedSearch'
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
         <Route path="/results" element={<Results />} />
         <Route path="/homegen" element={<HomeGen />} />
         <Route path="/resultsgen" element={<ResultsGen />} />
+        <Route path="/advanced-search" element={<AdvancedSearch />} />
       </Routes>
     </Router>
   )

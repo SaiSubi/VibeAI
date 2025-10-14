@@ -5,7 +5,7 @@ This script uses Gemini 2.5 Pro to convert natural language queries into structu
 and then searches the song database to return matching songs.
 """
 
-import sqlite3
+import psycopg2
 import json
 import google.generativeai as genai
 import sys
@@ -15,18 +15,17 @@ from datetime import datetime
 
 # Add parent directory to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from utils.config import Gemini_API_KEY
+from utils.config import Gemini_API_KEY, DATABASE_URL
+from vector_embeddings import VectorEmbeddingManager
 
 class SongSearchEngine:
-    def __init__(self, db_path: str = None):
-        if db_path is None:
-            # Use absolute path to ensure we get the right database
-            import os
-            current_dir = os.path.dirname(os.path.abspath(__file__))
-            self.db_path = os.path.join(os.path.dirname(current_dir), "song_database.db")
+    def __init__(self, db_url: str = None):
+        if db_url is None:
+            self.db_url = DATABASE_URL
         else:
-            self.db_path = db_path
+            self.db_url = db_url
         self.init_gemini()
+        self.vector_manager = VectorEmbeddingManager(db_url)
     
     def init_gemini(self):
         """Initialize Gemini Flash with search capabilities"""
@@ -128,9 +127,8 @@ class SongSearchEngine:
             List of matching songs with their details
         """
         
-        conn = sqlite3.connect(self.db_path)
-        conn.row_factory = sqlite3.Row  # Enable column access by name
-        cursor = conn.cursor()
+        conn = psycopg2.connect(self.db_url)
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         
         # Build the WHERE clause dynamically
         where_conditions = []
@@ -285,7 +283,7 @@ class SongSearchEngine:
         
         query = f"""
             SELECT 
-                id, title, artist, album, release_year, energy_level, 
+                id, spotify_id, title, artist, album, release_year, energy_level, 
                 mood_tags, language, genre, lyrical_themes, danceability_score,
                 tempo, melodic_expressiveness, vocal_prominence, timbre,
                 acousticness, popularity_score, song_description
@@ -345,6 +343,101 @@ class SongSearchEngine:
         
         return songs
     
+    def search_with_vector_similarity(self, user_query: str, limit: int = 20) -> List[Dict]:
+        """
+        Search songs using vector similarity only
+        
+        Args:
+            user_query: Natural language description of desired songs
+            limit: Maximum number of results to return
+            
+        Returns:
+            List of matching songs with similarity scores
+        """
+        print(f"🔍 Vector similarity search for: '{user_query}'")
+        
+        # Use vector similarity search
+        similar_songs = self.vector_manager.search_similar_songs(user_query, limit)
+        
+        return similar_songs
+    
+    def search_with_hybrid_approach(self, user_query: str, limit: int = 20, vector_weight: float = 0.7) -> List[Dict]:
+        """
+        Hybrid search combining vector similarity and structured search
+        
+        Args:
+            user_query: Natural language description of desired songs
+            limit: Maximum number of results to return
+            vector_weight: Weight for vector similarity (0.0 to 1.0)
+            
+        Returns:
+            List of matching songs with combined scores
+        """
+        print(f"🔍 Hybrid search for: '{user_query}' (vector weight: {vector_weight})")
+        
+        # Get vector similarity results
+        vector_results = self.vector_manager.search_similar_songs(user_query, limit * 2)
+        
+        # Get structured search results
+        search_params = self.parse_natural_language_query(user_query)
+        structured_results = self.search_songs(search_params)
+        
+        # Create a combined scoring system
+        combined_results = {}
+        
+        # Add vector similarity scores
+        for song in vector_results:
+            song_id = song['id']
+            combined_results[song_id] = {
+                'song': song,
+                'vector_score': song['similarity_score'],
+                'structured_score': 0.0,
+                'combined_score': 0.0
+            }
+        
+        # Add structured search scores (normalize by popularity and energy)
+        for song in structured_results:
+            song_id = song['id']
+            
+            # Calculate structured score based on popularity and energy
+            popularity_score = song.get('popularity_score', 0) / 10.0
+            energy_score = song.get('energy_level', 0) / 10.0
+            structured_score = (popularity_score + energy_score) / 2.0
+            
+            if song_id in combined_results:
+                combined_results[song_id]['structured_score'] = structured_score
+            else:
+                combined_results[song_id] = {
+                    'song': song,
+                    'vector_score': 0.0,
+                    'structured_score': structured_score,
+                    'combined_score': 0.0
+                }
+        
+        # Calculate combined scores
+        for song_id, data in combined_results.items():
+            vector_score = data['vector_score']
+            structured_score = data['structured_score']
+            
+            # Combine scores with weighted average
+            combined_score = (vector_weight * vector_score) + ((1 - vector_weight) * structured_score)
+            data['combined_score'] = combined_score
+        
+        # Sort by combined score and return top results
+        sorted_results = sorted(combined_results.values(), key=lambda x: x['combined_score'], reverse=True)
+        
+        # Return songs with metadata
+        final_results = []
+        for result in sorted_results[:limit]:
+            song = result['song'].copy()
+            song['vector_score'] = result['vector_score']
+            song['structured_score'] = result['structured_score']
+            song['combined_score'] = result['combined_score']
+            final_results.append(song)
+        
+        print(f"📊 Found {len(final_results)} songs using hybrid approach")
+        return final_results
+    
     def display_results(self, songs: List[Dict], query: str):
         """Display search results in a formatted way"""
         print(f"\n🎵 Search Results for: '{query}'")
@@ -362,6 +455,13 @@ class SongSearchEngine:
             print(f"    Genre: {song['genre']} | Language: {song['language']}")
             print(f"    Energy: {song['energy_level']}/10 | Danceability: {song['danceability_score']}/10")
             print(f"    Popularity: {song['popularity_score']}/10")
+            
+            # Show scoring information if available
+            if 'similarity_score' in song:
+                print(f"    Vector Similarity: {song['similarity_score']:.3f}")
+            if 'combined_score' in song:
+                print(f"    Combined Score: {song['combined_score']:.3f} (Vector: {song.get('vector_score', 0):.3f}, Structured: {song.get('structured_score', 0):.3f})")
+            
             if song['lyrical_themes']:
                 themes_str = ', '.join(song['lyrical_themes'][:3])  # Show first 3 themes
                 print(f"    Themes: {themes_str}")
@@ -371,8 +471,8 @@ class SongSearchEngine:
 
 def main():
     """Interactive search interface"""
-    print("🎵 VibeAI v2 - Natural Language Song Search")
-    print("=" * 50)
+    print("🎵 VibeAI v2 - Enhanced Song Search with Vector Embeddings")
+    print("=" * 60)
     print("Ask me to find songs in natural language!")
     print("Examples:")
     print("- 'I want happy, energetic songs'")
@@ -381,6 +481,10 @@ def main():
     print("- 'Songs by A.R. Rahman'")
     print("- 'Slow romantic songs'")
     print("- 'Motivational workout songs'")
+    print("\nSearch Methods:")
+    print("1. Traditional structured search")
+    print("2. Vector similarity search")
+    print("3. Hybrid search (combines both)")
     print("\nType 'quit' to exit.\n")
     
     # Initialize search engine
@@ -398,8 +502,23 @@ def main():
             if not user_query:
                 continue
             
-            # Search for songs
-            songs = search_engine.search_with_natural_language(user_query)
+            # Ask for search method
+            print("\nChoose search method:")
+            print("1. Traditional search")
+            print("2. Vector similarity search")
+            print("3. Hybrid search")
+            
+            method_choice = input("Enter choice (1-3, default=3): ").strip()
+            
+            if method_choice == '1':
+                # Traditional structured search
+                songs = search_engine.search_with_natural_language(user_query)
+            elif method_choice == '2':
+                # Vector similarity search
+                songs = search_engine.search_with_vector_similarity(user_query)
+            else:
+                # Hybrid search (default)
+                songs = search_engine.search_with_hybrid_approach(user_query)
             
             # Display results
             search_engine.display_results(songs, user_query)

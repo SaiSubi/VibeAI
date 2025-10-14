@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VibeAI v2</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Left Sidebar -->
+        <div class="sidebar">
+            <div class="logo" id="homeLogo">
+                <div class="logo-icon">V</div>
+                <h1>VibeAI</h1>
+            </div>
+            
+            <!-- Search Home Button (hidden by default) -->
+            <div class="search-home" id="searchHome" style="display: none;">
+                <button class="search-home-btn" id="searchHomeBtn">
+                    <i class="fas fa-home"></i>
+                    Search Home
+                </button>
+            </div>
+            
+            <div class="ready-to-go-vibes">
+                <h3>READY-TO-GO VIBES</h3>
+                <div class="playlist-buttons" id="playlistButtons">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header with Logo and Tagline -->
+            <div class="main-header">
+                <div class="main-logo">
+                    <div class="logo-icon">V</div>
+                    <h1>VibeAI</h1>
+                </div>
+                <p class="tagline">Your personal DJ for any mood.</p>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="search-container">
+                <div class="search-bar">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="Describe the vibe...">
+                </div>
+            </div>
+
+            <!-- Filters Section -->
+            <div class="filters-section">
+                <!-- Filter Buttons Row -->
+                <div class="filter-buttons-row" id="filterButtonsRow" style="display: none;">
+                    <span class="filter-label">Filter by:</span>
+                    <div class="filter-buttons">
+                        <button class="filter-btn" data-filter="artist">Artist</button>
+                        <button class="filter-btn" data-filter="release_date">Release Date</button>
+                        <button class="filter-btn" data-filter="genre">Genre</button>
+                        <button class="filter-btn" data-filter="emotion">Emotion</button>
+                        <button class="filter-btn" data-filter="energy">Energy</button>
+                        <button class="filter-btn" data-filter="tempo">Tempo</button>
+                        <button class="filter-btn" data-filter="danceability">Danceability</button>
+                        <button class="filter-btn" data-filter="language">Language</button>
+                        <button class="clear-all-btn" id="clearAllFilters">
+                            <i class="fas fa-times"></i>
+                            Clear All Filters
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Action Buttons Row -->
+                <div class="action-buttons-row">
+                    <button class="add-filters-btn" id="addFiltersBtn">
+                        <i class="fas fa-plus"></i>
+                        Add Filters
+                    </button>
+                    <button class="search-update-btn" id="searchUpdateBtn">
+                        <i class="fas fa-search"></i>
+                        Search
+                    </button>
+                </div>
+            </div>
+
+            <!-- Results Section (Hidden by default) -->
+            <div class="results-section" id="resultsSection" style="display: none;">
+                <!-- Playlist Header -->
+                <div class="playlist-header">
+                    <h2 id="playlistTitle">Your Curated Playlist</h2>
+                    <div class="playlist-actions">
+                        <button class="spotify-playlist-btn" id="createSpotifyPlaylistBtn">
+                            <i class="fab fa-spotify"></i>
+                            Play on Spotify
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Results Container -->
+                <div class="results-container" id="resultsContainer">
+                    <div class="loading" id="loadingIndicator" style="display: none;">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <span>Searching for your perfect songs...</span>
+                    </div>
+                    <div class="no-results" id="noResults" style="display: none;">
+                        <i class="fas fa-music"></i>
+                        <span>No songs found. Try adjusting your search or filters.</span>
+                    </div>
+                    <div class="tracks-list" id="tracksList">
+                        <!-- Tracks will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Modals -->
+    <div class="modal" id="filterModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Filter</h3>
+                <button class="close-btn" id="closeModal">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Filter content will be populated here -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="clearFilter">Clear This Filter</button>
+                <button class="btn-primary" id="applyFilter">Apply</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

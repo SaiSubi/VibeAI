@@ -25,3 +25,12 @@ typing_extensions==4.14.0
 urllib3==2.5.0
 uvicorn==0.34.3
 psycopg2-binary==2.9.9
+numpy==1.26.4
+scikit-learn==1.5.1
+langchain==0.1.0
+langchain-google-genai==0.0.6
+langgraph==0.0.20
+google-generativeai==0.3.2
+Flask==2.3.3
+Flask-CORS==4.0.0
+Werkzeug==2.3.7

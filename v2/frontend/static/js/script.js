@@ -9,6 +9,10 @@ class VibeAIApp {
         this.currentTrackIndex = -1;
         this.lastNaturalQuery = '';
         this.availableArtists = [];
+        this.availableLanguages = [];
+        this.isAgenticSearch = true;
+        this.hasUnsavedChanges = false;
+        this.isHomeView = true;
         
         this.init();
     }
@@ -17,27 +21,45 @@ class VibeAIApp {
         this.bindEvents();
         this.loadDefaultPlaylists();
         this.loadAvailableArtists();
-        this.setupSearch();
+        this.loadAvailableLanguages();
     }
     
     bindEvents() {
+        // Home logo click
+        document.getElementById('homeLogo').addEventListener('click', () => {
+            this.returnToHome();
+        });
+        
         // Search input
         const searchInput = document.getElementById('searchInput');
+        searchInput.addEventListener('input', () => {
+            this.markAsNeedsUpdate();
+        });
+        
         searchInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 this.performSearch();
             }
         });
         
-        // Mood buttons
-        document.querySelectorAll('.mood-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const query = e.currentTarget.dataset.query;
-                searchInput.value = query;
-                this.lastNaturalQuery = query;
-                this.performSearch();
-            });
+        // Search home button
+        document.getElementById('searchHomeBtn').addEventListener('click', () => {
+            this.returnToHome();
         });
+        
+        // Add filters button
+        document.getElementById('addFiltersBtn').addEventListener('click', () => {
+            this.toggleFilters();
+        });
+        
+        // Search update button
+        document.getElementById('searchUpdateBtn').addEventListener('click', () => {
+                this.performSearch();
+        });
+        
+        // Action buttons (removed - no longer needed)
+        
+        // Search chips (removed - no longer needed)
         
         // Filter buttons
         document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -46,15 +68,14 @@ class VibeAIApp {
             });
         });
         
-        // Popularity slider
-        const popularitySlider = document.getElementById('popularitySlider');
-        popularitySlider.addEventListener('input', () => {
-            this.updatePopularityFilter();
+        // Clear all filters button
+        document.getElementById('clearAllFilters').addEventListener('click', () => {
+            this.clearAllFilters();
         });
         
-        // Play all button
-        document.getElementById('playAllBtn').addEventListener('click', () => {
-            this.playAll();
+        // Spotify playlist creation button
+        document.getElementById('createSpotifyPlaylistBtn').addEventListener('click', () => {
+            this.createSpotifyPlaylist();
         });
         
         // Modal events
@@ -70,11 +91,6 @@ class VibeAIApp {
             this.clearCurrentFilter();
         });
         
-        // Clear all filters button
-        document.getElementById('clearAllFilters').addEventListener('click', () => {
-            this.clearAllFilters();
-        });
-        
         // Close modal on outside click
         document.getElementById('filterModal').addEventListener('click', (e) => {
             if (e.target.id === 'filterModal') {
@@ -83,183 +99,36 @@ class VibeAIApp {
         });
     }
     
-    async loadAvailableArtists() {
-        try {
-            const response = await fetch('/api/artists');
-            const data = await response.json();
-            if (data.success) {
-                this.availableArtists = data.artists;
-            }
-        } catch (error) {
-            console.error('Error loading artists:', error);
-        }
-    }
-    
-    async loadDefaultPlaylists() {
-        try {
-            const response = await fetch('/api/playlists');
-            const data = await response.json();
-            
-            if (data.success) {
-                this.renderDefaultPlaylists(data.playlists);
-            }
-        } catch (error) {
-            console.error('Error loading playlists:', error);
-        }
-    }
-    
-    renderDefaultPlaylists(playlists) {
-        const container = document.getElementById('playlistButtons');
-        container.innerHTML = '';
+    toggleFilters() {
+        const filterRow = document.getElementById('filterButtonsRow');
+        const addFiltersBtn = document.getElementById('addFiltersBtn');
         
-        playlists.forEach(playlist => {
-            const btn = document.createElement('button');
-            btn.className = 'playlist-btn';
-            btn.innerHTML = `
-                <div style="font-weight: 600; margin-bottom: 4px;">${playlist.name}</div>
-                <div style="font-size: 11px; color: #888;">${playlist.description}</div>
-            `;
-            btn.addEventListener('click', () => {
-                this.loadPlaylist(playlist.id);
-            });
-            container.appendChild(btn);
-        });
-    }
-    
-    async loadPlaylist(playlistId) {
-        try {
-            this.showLoading();
-            
-            const response = await fetch(`/api/playlist/${playlistId}`, {
-                method: 'POST'
-            });
-            const data = await response.json();
-            
-            if (data.success) {
-                this.currentPlaylist = data.playlist;
-                this.currentSongs = data.songs;
-                this.renderSongs(data.songs);
-                this.updatePlaylistTitle(data.playlist.name);
+        if (filterRow.style.display === 'none' || filterRow.style.display === '') {
+            // Show filters
+            filterRow.style.display = 'flex';
+            addFiltersBtn.classList.add('active');
+            addFiltersBtn.innerHTML = '<i class="fas fa-minus"></i> Hide Filters';
             } else {
-                this.showError('Failed to load playlist');
-            }
-        } catch (error) {
-            console.error('Error loading playlist:', error);
-            this.showError('Error loading playlist');
+            // Hide filters
+            filterRow.style.display = 'none';
+            addFiltersBtn.classList.remove('active');
+            addFiltersBtn.innerHTML = '<i class="fas fa-plus"></i> Add Filters';
         }
     }
     
-    async performSearch() {
-        const query = document.getElementById('searchInput').value.trim();
-        
-        try {
-            this.showLoading();
-            
-            // Check if natural language query changed
-            const naturalQueryChanged = query !== this.lastNaturalQuery;
-            this.lastNaturalQuery = query;
-            
-            const response = await fetch('/api/search', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    query: query,
-                    filters: this.currentFilters,
-                    popularity_min: 0,
-                    popularity_max: 10,
-                    limit: 50,
-                    use_gemini: naturalQueryChanged
-                })
-            });
-            
-            const data = await response.json();
-            
-            if (data.success) {
-                this.currentSongs = data.songs;
-                this.renderSongs(data.songs);
-                this.updatePlaylistTitle('Search Results');
-            } else {
-                this.showError('Search failed');
-            }
-        } catch (error) {
-            console.error('Error performing search:', error);
-            this.showError('Search failed');
-        }
+    updateFilters() {
+        // Update filters based on current UI state
+        this.markAsNeedsUpdate();
     }
     
-    renderSongs(songs) {
-        const container = document.getElementById('tracksList');
-        const loadingIndicator = document.getElementById('loadingIndicator');
-        const noResults = document.getElementById('noResults');
-        
-        loadingIndicator.style.display = 'none';
-        
-        if (!songs || songs.length === 0) {
-            noResults.style.display = 'flex';
-            container.innerHTML = '';
-            return;
-        }
-        
-        noResults.style.display = 'none';
-        
-        container.innerHTML = songs.map((song, index) => `
-            <div class="track-item" data-index="${index}">
-                <div class="track-album-art">
-                    <i class="fas fa-music"></i>
-                </div>
-                <div class="track-info">
-                    <div class="track-title">${song.title}</div>
-                    <div class="track-artist">${song.artist}</div>
-                    <div class="track-album">${song.album || 'Unknown Album'}</div>
-                </div>
-                <div class="track-meta">
-                    <div class="track-duration">${this.formatDuration(song.duration_ms || 0)}</div>
-                    <i class="fas fa-heart track-heart"></i>
-                </div>
-            </div>
-        `).join('');
-        
-        // Add click events to tracks
-        container.querySelectorAll('.track-item').forEach((item, index) => {
-            item.addEventListener('click', () => {
-                this.playTrack(index);
-            });
-        });
-        
-        // Add heart click events
-        container.querySelectorAll('.track-heart').forEach(heart => {
-            heart.addEventListener('click', (e) => {
-                e.stopPropagation();
-                heart.classList.toggle('liked');
-            });
-        });
+    markAsNeedsUpdate() {
+        const searchBtn = document.getElementById('searchUpdateBtn');
+        searchBtn.classList.add('needs-update');
     }
     
-    playTrack(index) {
-        // Remove playing class from all tracks
-        document.querySelectorAll('.track-item').forEach(item => {
-            item.classList.remove('playing');
-        });
-        
-        // Add playing class to current track
-        const trackItem = document.querySelector(`[data-index="${index}"]`);
-        if (trackItem) {
-            trackItem.classList.add('playing');
-        }
-        
-        this.currentTrackIndex = index;
-        this.isPlaying = true;
-        
-        // Here you would integrate with your audio player
-        console.log('Playing:', this.currentSongs[index]);
-    }
-    
-    playAll() {
-        if (this.currentSongs.length > 0) {
-            this.playTrack(0);
-        }
+    clearNeedsUpdate() {
+        const searchBtn = document.getElementById('searchUpdateBtn');
+        searchBtn.classList.remove('needs-update');
     }
     
     openFilterModal(filterType) {
@@ -292,6 +161,9 @@ class VibeAIApp {
                 break;
             case 'lyrical_theme':
                 content = this.createLyricalThemeFilter();
+                break;
+            case 'language':
+                content = this.createLanguageFilter();
                 break;
             case 'release_date':
                 content = this.createReleaseDateFilter();
@@ -454,6 +326,24 @@ class VibeAIApp {
         `;
     }
     
+    createLanguageFilter() {
+        return `
+            <div class="filter-options">
+                <div class="filter-option">
+                    <label>Select Languages</label>
+                    <div class="checkbox-group">
+                        ${this.availableLanguages.map(language => `
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="language_${language.replace(/[^a-zA-Z0-9]/g, '_')}" value="${language}">
+                                <label for="language_${language.replace(/[^a-zA-Z0-9]/g, '_')}">${language}</label>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
     createReleaseDateFilter() {
         return `
             <div class="filter-options">
@@ -596,6 +486,12 @@ class VibeAIApp {
                     filterValue.themes = Array.from(themeCheckboxes).map(cb => cb.value);
                 }
                 break;
+            case 'language':
+                const languageCheckboxes = document.querySelectorAll('#modalBody input[type="checkbox"]:checked');
+                if (languageCheckboxes.length > 0) {
+                    filterValue.languages = Array.from(languageCheckboxes).map(cb => cb.value);
+                }
+                break;
             case 'release_date':
                 const yearMin = document.getElementById('yearMin').value;
                 const yearMax = document.getElementById('yearMax').value;
@@ -618,8 +514,8 @@ class VibeAIApp {
         
         this.closeModal();
         
-        // Re-perform search (without calling Gemini since only filters changed)
-        this.performSearch();
+        // Mark as needing update instead of auto-searching
+        this.markAsNeedsUpdate();
     }
     
     clearCurrentFilter() {
@@ -663,28 +559,389 @@ class VibeAIApp {
             btn.classList.remove('active');
         });
         
-        // Reset popularity slider
-        document.getElementById('popularitySlider').value = 5;
-        
         this.closeModal();
         
-        // Re-perform search
-        this.performSearch();
+        // Mark as needing update instead of auto-searching
+        this.markAsNeedsUpdate();
     }
     
     closeModal() {
         document.getElementById('filterModal').style.display = 'none';
     }
     
-    updatePopularityFilter() {
-        const slider = document.getElementById('popularitySlider');
-        const value = parseInt(slider.value);
+    async loadAvailableArtists() {
+        try {
+            const response = await fetch('/api/artists');
+            const data = await response.json();
+            if (data.success) {
+                this.availableArtists = data.artists;
+            }
+        } catch (error) {
+            console.error('Error loading artists:', error);
+        }
+    }
+    
+    async loadAvailableLanguages() {
+        try {
+            const response = await fetch('/api/languages');
+            const data = await response.json();
+            if (data.success) {
+                this.availableLanguages = data.languages;
+            }
+        } catch (error) {
+            console.error('Error loading languages:', error);
+        }
+    }
+    
+    async loadDefaultPlaylists() {
+        try {
+            const response = await fetch('/api/playlists');
+            const data = await response.json();
+            
+            if (data.success) {
+                this.renderDefaultPlaylists(data.playlists);
+            }
+        } catch (error) {
+            console.error('Error loading playlists:', error);
+        }
+    }
+    
+    renderDefaultPlaylists(playlists) {
+        const container = document.getElementById('playlistButtons');
+        container.innerHTML = '';
         
-        // Update popularity range in filters
-        this.currentFilters.popularity_range = [value, 10];
+        playlists.forEach(playlist => {
+            const btn = document.createElement('button');
+            btn.className = 'playlist-btn';
+            btn.innerHTML = `
+                <i class="fas fa-music"></i>
+                <div>
+                    <div style="font-weight: 600; margin-bottom: 4px;">${playlist.name}</div>
+                    <div style="font-size: 11px; color: #888;">${playlist.description}</div>
+                </div>
+            `;
+            btn.addEventListener('click', () => {
+                this.loadPlaylistWithFilters(playlist);
+            });
+            container.appendChild(btn);
+        });
+    }
+    
+    async loadPlaylistWithFilters(playlist) {
+        console.log('🎵 Loading playlist:', playlist);
         
-        // Re-perform search (without calling Gemini since only filters changed)
+        try {
+            // Show results page immediately
+            this.showResults();
+            this.clearError();
+            this.showLoading();
+            
+            // Set the search input with the playlist query
+            document.getElementById('searchInput').value = playlist.query || playlist.name;
+            this.lastNaturalQuery = playlist.query || playlist.name;
+            
+            // Apply the playlist's filters
+            this.currentFilters = playlist.filters || {};
+            console.log('🔧 Applied filters:', this.currentFilters);
+            
+            // Perform search with the playlist's query and filters
+            const response = await fetch('/api/agentic-search', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    query: playlist.query || playlist.name,
+                    filters: this.currentFilters,
+                    max_results: 50
+                })
+            });
+            
+            console.log('📡 API Response status:', response.status);
+            const data = await response.json();
+            console.log('📊 API Response data:', data);
+            console.log('🎵 data.success:', data.success);
+            console.log('🎵 data.songs:', data.songs);
+            console.log('🎵 data.songs length:', data.songs?.length);
+            
+            if (data.success) {
+                this.currentPlaylist = playlist;
+                this.currentSongs = data.songs;
+                console.log('🎯 About to call renderSongs with:', data.songs?.length, 'songs');
+                this.renderSongs(data.songs, data);
+                this.updatePlaylistTitle('Your Curated Playlist');
+                this.showReturnButton();
+                this.clearNeedsUpdate();
+            } else {
+                console.log('❌ API returned success: false');
+                this.renderSongs([], data);
+            }
+        } catch (error) {
+            console.error('Error loading playlist:', error);
+            this.renderSongs([], null);
+        }
+    }
+    
+    async performSearch() {
+        const query = document.getElementById('searchInput').value.trim();
+        
+        if (!query) {
+            this.showError('Please enter a search query');
+            return;
+        }
+        
+        // Show results page immediately
+        this.showResults();
+        this.clearError();
+        this.showLoading();
+        
+        try {
+            // Check if natural language query changed
+            const naturalQueryChanged = query !== this.lastNaturalQuery;
+            this.lastNaturalQuery = query;
+            
+            let response;
+            
+            if (this.isAgenticSearch && query) {
+                // Use agentic search
+                response = await fetch('/api/agentic-search', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        query: query,
+                        filters: this.currentFilters,
+                        max_results: 10
+                    })
+                });
+            } else {
+                // Use regular search
+                response = await fetch('/api/search', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        query: query,
+                        filters: this.currentFilters,
+                        popularity_min: 0,
+                        popularity_max: 10,
+                        limit: 50,
+                        use_gemini: naturalQueryChanged
+                    })
+                });
+            }
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                this.currentSongs = data.songs;
+                this.renderSongs(data.songs, data);
+                this.updatePlaylistTitle('Your Curated Playlist');
+                this.clearNeedsUpdate();
+            } else {
+                this.renderSongs([], data);
+            }
+        } catch (error) {
+            console.error('Error performing search:', error);
+            // Don't show error message - just show no results
+            this.renderSongs([], null);
+        }
+    }
+    
+    async surpriseMe() {
+        const surpriseQueries = [
+            'surprise me with something new',
+            'random songs I might like',
+            'discover something unexpected',
+            'play something different',
+            'surprise me'
+        ];
+        
+        const randomQuery = surpriseQueries[Math.floor(Math.random() * surpriseQueries.length)];
+        document.getElementById('searchInput').value = randomQuery;
+        this.lastNaturalQuery = randomQuery;
         this.performSearch();
+    }
+    
+    renderSongs(songs, searchData = null) {
+        console.log('🎵 renderSongs called with:', songs?.length, 'songs');
+        console.log('🎵 Songs data:', songs);
+        console.log('🔍 Call stack:', new Error().stack);
+        
+        const container = document.getElementById('tracksList');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const noResults = document.getElementById('noResults');
+        
+        console.log('🔍 DOM elements found:', {
+            container: !!container,
+            loadingIndicator: !!loadingIndicator,
+            noResults: !!noResults
+        });
+        
+        // Hide loading indicator
+        loadingIndicator.style.display = 'none';
+        
+        // Check if we have songs
+        if (!songs || songs.length === 0) {
+            console.log('❌ No songs found - showing no results');
+            noResults.style.display = 'flex';
+            container.innerHTML = '';
+            return;
+        }
+        
+        console.log('✅ Rendering', songs.length, 'songs');
+        
+        // Hide no results message
+        noResults.style.display = 'none';
+        
+        // Generate HTML for songs
+        const html = songs.map((song, index) => `
+            <div class="track-item" data-index="${index}">
+                <div class="track-info">
+                    <div class="track-title">${song.title || 'Unknown Title'}</div>
+                    <div class="track-artist">${song.artist || 'Unknown Artist'}</div>
+                    <div class="track-album">${song.album || 'Unknown Album'}</div>
+                </div>
+                <div class="track-meta">
+                    <i class="fas fa-heart track-heart"></i>
+                </div>
+            </div>
+        `).join('');
+        
+        console.log('📝 Generated HTML length:', html.length);
+        
+        // Set the HTML content
+        container.innerHTML = html;
+        
+        console.log('🎯 Container updated, innerHTML length:', container.innerHTML.length);
+        
+        // Add click events to tracks
+        container.querySelectorAll('.track-item').forEach((item, index) => {
+            item.addEventListener('click', () => {
+                this.playTrack(index);
+            });
+        });
+        
+        // Add heart click events
+        container.querySelectorAll('.track-heart').forEach(heart => {
+            heart.addEventListener('click', (e) => {
+                e.stopPropagation();
+                heart.classList.toggle('liked');
+            });
+        });
+    }
+    
+    playTrack(index) {
+        // Remove playing class from all tracks
+        document.querySelectorAll('.track-item').forEach(item => {
+            item.classList.remove('playing');
+        });
+        
+        // Add playing class to current track
+        const trackItem = document.querySelector(`[data-index="${index}"]`);
+        if (trackItem) {
+            trackItem.classList.add('playing');
+        }
+        
+        this.currentTrackIndex = index;
+        this.isPlaying = true;
+        
+        // Here you would integrate with your audio player
+        console.log('Playing:', this.currentSongs[index]);
+    }
+    
+    showResults() {
+        this.isHomeView = false;
+        document.getElementById('resultsSection').style.display = 'block';
+        this.showReturnButton();
+        
+        // Add results-view class to main content
+        document.querySelector('.main-content').classList.add('results-view');
+        
+        // Hide home page elements but keep search bar visible
+        document.querySelector('.main-header').style.display = 'none';
+        
+        // Scroll to results
+        document.getElementById('resultsSection').scrollIntoView({ 
+            behavior: 'smooth' 
+        });
+    }
+    
+    showReturnButton() {
+        document.getElementById('searchHome').style.display = 'block';
+    }
+    
+    hideReturnButton() {
+        document.getElementById('searchHome').style.display = 'none';
+    }
+    
+    returnToHome() {
+        this.isHomeView = true;
+        document.getElementById('resultsSection').style.display = 'none';
+        this.hideReturnButton();
+        
+        // Remove results-view class from main content
+        document.querySelector('.main-content').classList.remove('results-view');
+        
+        // Show home page elements
+        document.querySelector('.main-header').style.display = 'block';
+        
+        // Reset filter button state
+        const filterRow = document.getElementById('filterButtonsRow');
+        const addFiltersBtn = document.getElementById('addFiltersBtn');
+        filterRow.style.display = 'none';
+        addFiltersBtn.classList.remove('active');
+        addFiltersBtn.innerHTML = '<i class="fas fa-plus"></i> Add Filters';
+        
+        // Clear search input
+        document.getElementById('searchInput').value = '';
+        this.lastNaturalQuery = '';
+        
+        // Clear filters
+        this.currentFilters = {};
+        this.resetFiltersUI();
+        
+        // Scroll to top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    
+    resetFiltersUI() {
+        // Reset dropdowns
+        document.querySelectorAll('.dropdown-text').forEach(text => {
+            text.textContent = 'Any';
+        });
+        
+        // Reset toggles
+        document.querySelectorAll('.toggle-switch').forEach(toggle => {
+            toggle.classList.remove('active');
+        });
+        
+        // Reset checkboxes
+        document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+            checkbox.checked = false;
+        });
+        
+        // Set familiar tracks as default (if element exists)
+        const familiarCheck = document.getElementById('familiarCheck');
+        const familiarToggle = document.getElementById('familiarToggle');
+        if (familiarCheck) {
+            familiarCheck.checked = true;
+        }
+        if (familiarToggle) {
+            familiarToggle.classList.add('active');
+        }
+        
+        // Reset sliders (if elements exist)
+        const energySlider = document.getElementById('energySlider');
+        const tempoSlider = document.getElementById('tempoSlider');
+        if (energySlider) {
+            energySlider.value = 5;
+        }
+        if (tempoSlider) {
+            tempoSlider.value = 5;
+        }
     }
     
     updatePlaylistTitle(title) {
@@ -697,23 +954,118 @@ class VibeAIApp {
         document.getElementById('tracksList').innerHTML = '';
     }
     
+    clearError() {
+        document.getElementById('noResults').style.display = 'none';
+        document.getElementById('loadingIndicator').style.display = 'none';
+    }
+    
     showError(message) {
         document.getElementById('loadingIndicator').style.display = 'none';
         document.getElementById('noResults').style.display = 'flex';
         document.getElementById('noResults').querySelector('span').textContent = message;
     }
     
-    formatDuration(ms) {
-        if (!ms) return '0:00';
-        const minutes = Math.floor(ms / 60000);
-        const seconds = Math.floor((ms % 60000) / 1000);
-        return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    async createSpotifyPlaylist() {
+        if (!this.currentSongs || this.currentSongs.length === 0) {
+            this.showError('No songs to create playlist with');
+            return;
+        }
+        
+        const createBtn = document.getElementById('createSpotifyPlaylistBtn');
+        const originalText = createBtn.innerHTML;
+        
+        try {
+            // Show loading state
+            createBtn.disabled = true;
+            createBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
+            
+            // Get playlist name from current search
+            const playlistTitle = document.getElementById('playlistTitle').textContent;
+            const playlistName = playlistTitle === 'Search Results' ? 'VibeAI Search Results' : playlistTitle;
+            
+            // Create playlist
+            const response = await fetch('/api/create-spotify-playlist', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    songs: this.currentSongs.slice(0, 20), // Limit to 20 songs
+                    playlist_name: playlistName
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                // Show success message and open playlist
+                this.showSuccess(`Playlist created with ${data.tracks_added} songs!`);
+                
+                // Open Spotify playlist in new tab
+                window.open(data.playlist_url, '_blank');
+                
+                // Update button to show success
+                createBtn.innerHTML = '<i class="fab fa-spotify"></i> View Playlist';
+                createBtn.onclick = () => window.open(data.playlist_url, '_blank');
+            } else {
+                this.showError(`Failed to create playlist: ${data.error}`);
+            }
+            
+        } catch (error) {
+            console.error('Error creating Spotify playlist:', error);
+            this.showError('Failed to create Spotify playlist');
+        } finally {
+            // Reset button state
+            setTimeout(() => {
+                createBtn.disabled = false;
+                createBtn.innerHTML = originalText;
+                createBtn.onclick = () => this.createSpotifyPlaylist();
+            }, 3000);
+        }
     }
     
-    setupSearch() {
-        // No auto-search on input change - only on Enter key or filter changes
-        // This prevents excessive API calls to Gemini
-        console.log('Search setup: Gemini will only be called on Enter key press');
+    showSuccess(message) {
+        // Create a temporary success notification
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #1db954, #1ed760);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(29, 185, 84, 0.3);
+            animation: slideIn 0.3s ease;
+        `;
+        notification.textContent = `✅ ${message}`;
+        
+        document.body.appendChild(notification);
+        
+        // Remove notification after 3 seconds
+        setTimeout(() => {
+            notification.remove();
+        }, 3000);
+    }
+    
+    markAsNeedsUpdate() {
+        this.hasUnsavedChanges = true;
+        const createBtn = document.getElementById('createPlaylistBtn');
+        if (createBtn) {
+            createBtn.style.background = 'linear-gradient(135deg, #ff6b6b, #ff5252)';
+            createBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Search';
+        }
+    }
+    
+    clearNeedsUpdate() {
+        this.hasUnsavedChanges = false;
+        const createBtn = document.getElementById('createPlaylistBtn');
+        if (createBtn) {
+            createBtn.style.background = 'linear-gradient(135deg, #00ff88, #00cc6a)';
+            createBtn.innerHTML = '<i class="fas fa-plus"></i> Create Playlist';
+        }
     }
 }
 

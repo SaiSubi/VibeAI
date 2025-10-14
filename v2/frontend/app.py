@@ -12,8 +12,10 @@ import json
 
 # Add parent directory to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 from song_search import SongSearchEngine
 from song_manager import SongManager
+from simplified_agentic_search import agentic_song_search
 
 app = Flask(__name__)
 CORS(app)
@@ -58,6 +60,11 @@ def search_songs():
         # Limit results
         results = filtered_songs[:limit]
         
+        print(f"🔍 Backend returning {len(results)} songs")
+        if results:
+            print(f"📋 First song structure: {list(results[0].keys())}")
+            print(f"📋 First song sample: {results[0]}")
+        
         return jsonify({
             'success': True,
             'songs': results,
@@ -101,6 +108,29 @@ def search_with_gemini_and_filters(query, filters, popularity_min, popularity_ma
     except Exception as e:
         print(f"Error in Gemini search: {e}")
         return []
+
+@app.route('/api/languages', methods=['GET'])
+def get_languages():
+    """Get list of all languages for filtering"""
+    try:
+        conn = song_manager.get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT DISTINCT language FROM songs WHERE language IS NOT NULL AND language != '' ORDER BY language")
+        languages = [row[0] for row in cursor.fetchall()]
+        
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'languages': languages
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
 @app.route('/api/artists', methods=['GET'])
 def get_artists():
@@ -183,6 +213,61 @@ def get_default_playlists():
                 'themes': ['Feel Good', 'Carefree', 'Solitude']
             },
             'description': 'Perfect for relaxing and unwinding'
+        },
+        {
+            'id': 'road_trip',
+            'name': 'Road Trip',
+            'query': 'upbeat songs perfect for a road trip adventure',
+            'filters': {
+                'energy_levels': ['medium', 'high'],
+                'tempo_levels': ['medium', 'fast'],
+                'themes': ['Adventure', 'Feel Good', 'Nostalgia']
+            },
+            'description': 'Hit the road with these perfect tunes'
+        },
+        {
+            'id': 'coffee_shop',
+            'name': 'Coffee Shop Jazz',
+            'query': 'smooth jazz and acoustic songs for a coffee shop vibe',
+            'filters': {
+                'genres': ['Jazz', 'Acoustic', 'Folk'],
+                'energy_levels': ['low', 'medium'],
+                'tempo_levels': ['slow', 'medium']
+            },
+            'description': 'Perfect background music for your coffee break'
+        },
+        {
+            'id': 'rainy_day',
+            'name': 'Rainy Day',
+            'query': 'melancholic and introspective songs for a rainy day',
+            'filters': {
+                'energy_levels': ['low'],
+                'tempo_levels': ['slow'],
+                'themes': ['Melancholy', 'Reflection/Introspection', 'Nostalgia']
+            },
+            'description': 'Cozy up with these rainy day melodies'
+        },
+        {
+            'id': 'focus_flow',
+            'name': 'Focus Flow',
+            'query': 'instrumental and ambient music for deep focus',
+            'filters': {
+                'include_instrumentals': True,
+                'energy_levels': ['low', 'medium'],
+                'tempo_levels': ['slow', 'medium']
+            },
+            'description': 'Stay focused with these ambient tracks'
+        },
+        {
+            'id': 'sunset_vibes',
+            'name': 'Sunset Vibes',
+            'query': 'warm and mellow songs perfect for watching the sunset',
+            'filters': {
+                'energy_levels': ['low', 'medium'],
+                'tempo_levels': ['slow', 'medium'],
+                'themes': ['Peaceful', 'Reflection/Introspection', 'Warm']
+            },
+            'description': 'Wind down with these sunset melodies'
         }
     ]
     
@@ -276,6 +361,19 @@ def convert_filter_levels_to_ranges(filters):
         if danceability_ranges:
             converted['danceability_range'] = [min(danceability_ranges), max(danceability_ranges)]
         del converted['danceability_levels']
+    
+    # Handle new filter types
+    if 'genre' in converted:
+        converted['genres'] = [converted['genre']]
+        del converted['genre']
+    
+    if 'decade' in converted:
+        decade = converted['decade']
+        if decade:
+            # Convert decade to year range
+            decade_year = int(decade.replace('s', ''))
+            converted['year_range'] = [decade_year, decade_year + 9]
+        del converted['decade']
     
     return converted
 
@@ -424,6 +522,236 @@ def apply_additional_filters(songs, filters):
     # Since we now handle all filtering in the SQL query,
     # this function is mainly for any post-processing if needed
     return songs
+
+@app.route('/api/agentic-search', methods=['POST'])
+def agentic_search():
+    """Agentic AI song search using multi-agent system"""
+    try:
+        data = request.get_json()
+        query = data.get('query', '')
+        filters = data.get('filters', {})
+        max_results = data.get('max_results', 10)
+        
+        if not query.strip():
+            return jsonify({
+                'success': False,
+                'error': 'Query cannot be empty'
+            }), 400
+        
+        print(f"🎵 Agentic search request: '{query}' (max_results: {max_results}, filters: {filters})")
+        
+        # Call the agentic search system with filters
+        result = agentic_song_search(query, max_results, filters)
+        
+        print(f"✅ Agentic search completed: {result['total_selected']} songs found using {result['search_method']} method")
+        
+        # Format songs for frontend
+        formatted_songs = []
+        for song in result['songs']:
+            formatted_song = {
+                'id': song.get('id'),
+                'title': song.get('title'),
+                'artist': song.get('artist'),
+                'album': song.get('album', ''),
+                'release_year': song.get('release_year', ''),
+                'spotify_id': song.get('spotify_id'),
+                'spotify_uri': song.get('spotify_uri'),
+                'match_score': song.get('match_score', 0),
+                'reasoning': song.get('reasoning', ''),
+                'energy_level': song.get('energy_level', 0),
+                'popularity_score': song.get('popularity_score', 0),
+                'genre': song.get('genre', ''),
+                'language': song.get('language', ''),
+                'mood_tags': song.get('mood_tags', ''),
+                'lyrical_themes': song.get('lyrical_themes', ''),
+                'tempo': song.get('tempo', 0),
+                'danceability_score': song.get('danceability_score', 0),
+                'acousticness': song.get('acousticness', 0)
+            }
+            formatted_songs.append(formatted_song)
+        
+        return jsonify({
+            'success': True,
+            'songs': formatted_songs,
+            'total': len(formatted_songs),
+            'query': query,
+            'query_interpretation': result['query_interpretation'],
+            'search_method': result['search_method'],
+            'total_candidates': result['total_candidates'],
+            'total_selected': result['total_selected'],
+            'selection_reasoning': result['selection_reasoning'],
+            'enriched_query': result['enriched_query'],
+            'is_agentic': True
+        })
+        
+    except Exception as e:
+        print(f"❌ Error in agentic search: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/create-spotify-playlist', methods=['POST'])
+def create_spotify_playlist():
+    """Create a Spotify playlist from search results"""
+    try:
+        data = request.get_json()
+        songs = data.get('songs', [])
+        playlist_name = data.get('playlist_name', 'VibeAI Search Results')
+        
+        if not songs:
+            return jsonify({
+                'success': False,
+                'error': 'No songs provided'
+            }), 400
+        
+        # Extract Spotify URIs from songs
+        track_uris = []
+        invalid_songs = []
+        
+        for song in songs:
+            if song.get('spotify_uri') and song.get('spotify_uri') != 'spotify:track:':
+                track_uris.append(song['spotify_uri'])
+            elif song.get('spotify_id'):
+                spotify_id = song['spotify_id']
+                # Clean and validate Spotify ID
+                if spotify_id and isinstance(spotify_id, str):
+                    spotify_id = spotify_id.strip()
+                    # Validate Spotify ID format (22 characters, alphanumeric)
+                    if len(spotify_id) == 22 and spotify_id.isalnum():
+                        track_uris.append(f"spotify:track:{spotify_id}")
+                    else:
+                        invalid_songs.append({
+                            'id': spotify_id,
+                            'title': song.get('title', 'Unknown'),
+                            'artist': song.get('artist', 'Unknown'),
+                            'reason': f'Invalid format (length: {len(spotify_id)})'
+                        })
+                else:
+                    invalid_songs.append({
+                        'id': spotify_id,
+                        'title': song.get('title', 'Unknown'),
+                        'artist': song.get('artist', 'Unknown'),
+                        'reason': 'Empty or invalid type'
+                    })
+            else:
+                invalid_songs.append({
+                    'id': None,
+                    'title': song.get('title', 'Unknown'),
+                    'artist': song.get('artist', 'Unknown'),
+                    'reason': 'No Spotify ID or URI'
+                })
+        
+        print(f"🎵 Creating playlist with {len(track_uris)} valid tracks")
+        if invalid_songs:
+            print(f"⚠️ Skipped {len(invalid_songs)} invalid songs")
+        
+        if not track_uris:
+            return jsonify({
+                'success': False,
+                'error': 'No valid Spotify URIs found'
+            }), 400
+        
+        # Import Spotify functions
+        import sys
+        import os
+        sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".."))
+        from utils.spotify import create_playlist, add_tracks_to_playlist
+        from utils.token import get_service_account_access_token
+        
+        # Get service account token for anonymous use
+        access_token = get_service_account_access_token()
+        if not access_token:
+            return jsonify({
+                'success': False,
+                'error': 'Failed to get Spotify access token'
+            }), 500
+        
+        # Get the actual Spotify user ID for the service account
+        import requests
+        user_response = requests.get(
+            'https://api.spotify.com/v1/me',
+            headers={'Authorization': f'Bearer {access_token}'}
+        )
+        
+        if user_response.status_code != 200:
+            return jsonify({
+                'success': False,
+                'error': f'Failed to get user info: {user_response.json()}'
+            }), 500
+        
+        service_user_id = user_response.json()['id']
+        
+        # Create playlist (using service account user ID)
+        import uuid
+        unique_id = str(uuid.uuid4())[:8]
+        unique_playlist_name = f"{playlist_name} - {unique_id}"
+        
+        playlist = create_playlist(
+            user_id=service_user_id,
+            access_token=access_token,
+            playlist_name=unique_playlist_name,
+            description=f"Created by VibeAI - {len(track_uris)} songs",
+            public=True
+        )
+        
+        if 'error' in playlist:
+            return jsonify({
+                'success': False,
+                'error': f"Failed to create playlist: {playlist['error']}"
+            }), 500
+        
+        playlist_id = playlist["id"]
+        playlist_url = playlist["external_urls"]["spotify"]
+        
+        # Add tracks to playlist with retry logic
+        print(f"🎵 Adding {len(track_uris)} tracks to playlist")
+        
+        add_response = add_tracks_to_playlist(playlist_id, track_uris, access_token)
+        
+        if 'error' in add_response:
+            error_details = add_response['error']
+            if isinstance(error_details, dict) and 'message' in error_details:
+                error_message = f"Spotify API error: {error_details}"
+            else:
+                error_message = f"Failed to add tracks: {error_details}"
+            
+            print(f"❌ Error adding tracks: {error_message}")
+            
+            # If we have many tracks, try with fewer tracks to isolate the problematic ones
+            if len(track_uris) > 5:
+                print(f"🔄 Retrying with first 5 tracks only...")
+                retry_response = add_tracks_to_playlist(playlist_id, track_uris[:5], access_token)
+                if 'error' not in retry_response:
+                    print(f"✅ Successfully added {len(track_uris[:5])} tracks (out of {len(track_uris)} requested)")
+                    return jsonify({
+                        'success': True,
+                        'playlist_id': playlist_id,
+                        'playlist_url': playlist_url,
+                        'playlist_name': unique_playlist_name,
+                        'tracks_added': len(track_uris[:5]),
+                        'warning': f'Only {len(track_uris[:5])} tracks added due to API errors'
+                    })
+            
+            return jsonify({
+                'success': False,
+                'error': error_message
+            }), 500
+        
+        return jsonify({
+            'success': True,
+            'playlist_id': playlist_id,
+            'playlist_url': playlist_url,
+            'playlist_name': unique_playlist_name,
+            'tracks_added': len(track_uris)
+        })
+        
+    except Exception as e:
+        print(f"❌ Error creating Spotify playlist: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
 if __name__ == '__main__':
     app.run(debug=True, port=5001)

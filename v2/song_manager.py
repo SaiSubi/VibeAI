@@ -4,7 +4,7 @@ VibeAI v2 - Song Manager
 Clean, modular functions for song analysis, playlist management, and database operations.
 """
 
-import sqlite3
+import psycopg2
 import json
 import time
 import google.generativeai as genai
@@ -16,31 +16,28 @@ from datetime import datetime
 
 # Add parent directory to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from utils.config import Gemini_API_KEY, SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, VibeAI_userid
+from utils.config import Gemini_API_KEY, SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, VibeAI_userid, DATABASE_URL
 from utils.token import get_access_token
 from utils.spotify import get_liked_songs
 from utils.groq import call_groq_api
 
 class SongManager:
-    def __init__(self, db_path: str = None):
-        if db_path is None:
-            # Use absolute path to ensure we get the right database
-            import os
-            current_dir = os.path.dirname(os.path.abspath(__file__))
-            self.db_path = os.path.join(os.path.dirname(current_dir), "song_database.db")
+    def __init__(self, db_url: str = None):
+        if db_url is None:
+            self.db_url = DATABASE_URL
         else:
-            self.db_path = db_path
+            self.db_url = db_url
         self.init_database()
         self.init_gemini()
     
     def init_database(self):
-        """Initialize the SQLite database with the songs table"""
-        conn = sqlite3.connect(self.db_path)
+        """Initialize the PostgreSQL database with the songs table"""
+        conn = psycopg2.connect(self.db_url)
         cursor = conn.cursor()
         
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS songs (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id SERIAL PRIMARY KEY,
                 spotify_id TEXT UNIQUE,
                 title TEXT NOT NULL,
                 artist TEXT NOT NULL,
@@ -73,7 +70,8 @@ class SongManager:
                 timbre INTEGER DEFAULT 0,
                 theme_scores TEXT DEFAULT '{}',
                 last_analyzed TEXT,
-                genre TEXT DEFAULT 'Unknown'
+                genre TEXT DEFAULT 'Unknown',
+                vector_embedding TEXT DEFAULT NULL
             )
         ''')
         
@@ -88,7 +86,7 @@ class SongManager:
     
     def get_db_connection(self):
         """Get a database connection"""
-        return sqlite3.connect(self.db_path)
+        return psycopg2.connect(self.db_url)
     def analyze_song_with_gemini(self, title: str, artist: str) -> Tuple[Optional[Dict], Optional[str]]:
         """
         Analyze a single song using Gemini API
@@ -192,11 +190,21 @@ class SongManager:
                 emotion_vector = [0, 0, 0]
             emotion_str = f"{emotion_vector[0]},{emotion_vector[1]},{emotion_vector[2]}"
             
-            # Convert lyrical themes to string
-            themes_str = ','.join(lyrical_themes) if lyrical_themes else ''
+            # Convert lyrical themes to string (ensure it's a list first)
+            if isinstance(lyrical_themes, list):
+                themes_str = ','.join(lyrical_themes) if lyrical_themes else ''
+            elif isinstance(lyrical_themes, str):
+                themes_str = lyrical_themes
+            else:
+                themes_str = str(lyrical_themes) if lyrical_themes else ''
             
-            # Convert theme scores to string
-            theme_scores_str = json.dumps(theme_scores) if theme_scores else '{}'
+            # Convert theme scores to string (ensure it's a dict first)
+            if isinstance(theme_scores, dict):
+                theme_scores_str = json.dumps(theme_scores) if theme_scores else '{}'
+            elif isinstance(theme_scores, str):
+                theme_scores_str = theme_scores
+            else:
+                theme_scores_str = json.dumps(theme_scores) if theme_scores else '{}'
             
             # Update the song
             cursor.execute("""
@@ -746,7 +754,7 @@ def main():
     
     # Example: Analyze 10 unanalyzed songs
     print(f"\n🔄 Analyzing 10 unanalyzed songs...")
-    results = manager.analyze_playlist_songs(limit=10)
+    results = manager.analyze_playlist_songs(limit=100)
     print(f"✅ Analysis complete: {results['analyzed']} analyzed, {results['errors']} errors")
 
 if __name__ == "__main__":

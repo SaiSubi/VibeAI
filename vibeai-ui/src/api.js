@@ -166,3 +166,52 @@ export const checkUserRegistered = async (userId) => {
     return { registered: false };
   }
 };
+
+// 🎵 V2 Agentic Search API functions
+export const agenticSearch = async (query, filters = {}, maxResults = 10) => {
+  try {
+    const response = await axios.post(`${BASE_URL}/v2/api/agentic-search`, {
+      query,
+      filters,
+      max_results: maxResults
+    });
+    console.log("✅ Agentic search response:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Agentic search failed:", error);
+    return { error: "Failed to perform agentic search" };
+  }
+};
+
+export const getDefaultPlaylists = async () => {
+  try {
+    const response = await axios.get(`${BASE_URL}/v2/api/playlists`);
+    console.log("✅ Default playlists response:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Failed to get playlists:", error);
+    return { error: "Failed to get playlists" };
+  }
+};
+
+export const getAvailableArtists = async () => {
+  try {
+    const response = await axios.get(`${BASE_URL}/v2/api/artists`);
+    console.log("✅ Available artists response:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Failed to get artists:", error);
+    return { error: "Failed to get artists" };
+  }
+};
+
+export const getAvailableLanguages = async () => {
+  try {
+    const response = await axios.get(`${BASE_URL}/v2/api/languages`);
+    console.log("✅ Available languages response:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Failed to get languages:", error);
+    return { error: "Failed to get languages" };
+  }
+};
