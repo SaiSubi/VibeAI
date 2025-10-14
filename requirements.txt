@@ -29,8 +29,14 @@ numpy==1.26.4
 scikit-learn==1.5.1
 langchain==0.1.0
 langchain-google-genai==0.0.6
+langchain-core==0.1.23
+langchain-community==0.0.20
 langgraph==0.0.20
 google-generativeai==0.3.2
+tenacity==8.2.3
+dataclasses-json==0.6.7
+jsonpatch==1.33
+langsmith==0.0.87
 Flask==2.3.3
 Flask-CORS==4.0.0
 Werkzeug==2.3.7

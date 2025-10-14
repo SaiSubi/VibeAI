@@ -209,6 +209,12 @@ async def v2_home(request: Request):
 async def search_songs(request: Request):
     """Search songs with natural language and filters"""
     try:
+        if not AGENTIC_SEARCH_AVAILABLE:
+            return JSONResponse({
+                'success': False,
+                'error': 'Search temporarily unavailable - dependencies loading'
+            }, status_code=503)
+            
         data = await request.json()
         
         # Extract search parameters
