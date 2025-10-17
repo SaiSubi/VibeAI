@@ -1,5 +1,5 @@
 [build]
-  command = "echo 'V2 static files ready for deployment'"
+  command = "echo 'V2 static files ready for deployment - updated'"
   publish = "."
 
 [[redirects]]
