@@ -59,7 +59,7 @@ node_modules/
 
 # Scripts and testing
 scripts/
-v2/
+# v2/  # Commented out - v2 is needed for the backend
 *.pyc
 *.pyo
 *.pyd
