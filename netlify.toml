@@ -1,6 +1,6 @@
 [build]
   command = "echo 'V2 static files ready - no build needed'"
-  publish = "."
+  publish = "vibeai-ui/dist"
 
 [build.environment]
   NODE_VERSION = "18"
