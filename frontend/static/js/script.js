@@ -653,6 +653,7 @@ class VibeAIApp {
                 </div>
             `;
             btn.addEventListener('click', () => {
+                console.log('🎵 Playlist button clicked:', playlist.name);
                 this.loadPlaylistWithFilters(playlist);
             });
             container.appendChild(btn);
