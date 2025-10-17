@@ -1019,7 +1019,7 @@ class VibeAIApp {
             const playlistName = playlistTitle === 'Search Results' ? 'VibeAI Search Results' : playlistTitle;
             
             // Create playlist
-            const response = await fetch('https://vibeai-backend-534228867297.us-west1.run.app/api/create-spotify-playlist', {
+            const response = await fetch('https://vibeai-backend-534228867297.us-west1.run.app/create-spotify-playlist', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

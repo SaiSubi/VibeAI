@@ -66,6 +66,36 @@ DEFAULT_PLAYLISTS = {
         "description": "Relaxing chill songs for unwinding",
         "query": "relaxing chill songs for unwinding",
         "filters": {"energy_range": [1, 4], "themes": ["Carefree", "Solitude"]}
+    },
+    "road_trip": {
+        "name": "Road Trip",
+        "description": "Upbeat songs perfect for a road trip adventure",
+        "query": "upbeat songs perfect for a road trip adventure",
+        "filters": {"energy_range": [4, 10], "themes": ["Adventure", "Feel Good", "Nostalgia"]}
+    },
+    "coffee_shop": {
+        "name": "Coffee Shop Jazz",
+        "description": "Smooth jazz and acoustic songs for a coffee shop vibe",
+        "query": "smooth jazz and acoustic songs for a coffee shop vibe",
+        "filters": {"genres": ["Jazz", "Acoustic", "Folk"], "energy_range": [1, 6]}
+    },
+    "rainy_day": {
+        "name": "Rainy Day",
+        "description": "Melancholic and introspective songs for a rainy day",
+        "query": "melancholic and introspective songs for a rainy day",
+        "filters": {"energy_range": [1, 3], "themes": ["Melancholy", "Reflection/Introspection", "Nostalgia"]}
+    },
+    "focus_flow": {
+        "name": "Focus Flow",
+        "description": "Instrumental and ambient music for deep focus",
+        "query": "instrumental and ambient music for deep focus",
+        "filters": {"energy_range": [1, 6], "themes": ["Instrumental", "Ambient"]}
+    },
+    "sunset_vibes": {
+        "name": "Sunset Vibes",
+        "description": "Warm and mellow songs perfect for watching the sunset",
+        "query": "warm and mellow songs perfect for watching the sunset",
+        "filters": {"energy_range": [1, 6], "themes": ["Warm", "Mellow", "Peaceful"]}
     }
 }
 
