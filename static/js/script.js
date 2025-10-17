@@ -571,7 +571,7 @@ class VibeAIApp {
     
     async loadAvailableArtists() {
         try {
-            const response = await fetch('/v2/api/artists');
+            const response = await fetch('https://vibeai-backend-534228867297.us-west1.run.app/v2/api/artists');
             const data = await response.json();
             if (data.success) {
                 this.availableArtists = data.artists;
@@ -583,7 +583,7 @@ class VibeAIApp {
     
     async loadAvailableLanguages() {
         try {
-            const response = await fetch('/v2/api/languages');
+            const response = await fetch('https://vibeai-backend-534228867297.us-west1.run.app/v2/api/languages');
             const data = await response.json();
             if (data.success) {
                 this.availableLanguages = data.languages;
@@ -596,7 +596,7 @@ class VibeAIApp {
     async loadDefaultPlaylists() {
         try {
             console.log('Loading default playlists...');
-            const response = await fetch('/v2/api/playlists');
+            const response = await fetch('https://vibeai-backend-534228867297.us-west1.run.app/v2/api/playlists');
             const data = await response.json();
             
             console.log('Playlists response:', data);
@@ -660,7 +660,7 @@ class VibeAIApp {
             console.log('🔧 Applied filters:', this.currentFilters);
             
             // Perform search with the playlist's query and filters
-            const response = await fetch('/v2/api/agentic-search', {
+            const response = await fetch('https://vibeai-backend-534228867297.us-west1.run.app/v2/api/agentic-search', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -719,7 +719,7 @@ class VibeAIApp {
             
             if (this.isAgenticSearch && query) {
                 // Use agentic search
-                response = await fetch('/v2/api/agentic-search', {
+                response = await fetch('https://vibeai-backend-534228867297.us-west1.run.app/v2/api/agentic-search', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -732,7 +732,7 @@ class VibeAIApp {
                 });
             } else {
                 // Use regular search
-                response = await fetch('/v2/api/search', {
+                response = await fetch('https://vibeai-backend-534228867297.us-west1.run.app/v2/api/search', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

@@ -24,6 +24,14 @@ router = APIRouter(prefix="/v2", tags=["v2"])
 song_manager = SongManager()
 search_engine = SongSearchEngine()
 
+# Check if agentic search is available
+AGENTIC_SEARCH_AVAILABLE = True
+try:
+    from v2.simplified_agentic_search import agentic_song_search
+except ImportError as e:
+    print(f"Warning: Agentic search not available: {e}")
+    AGENTIC_SEARCH_AVAILABLE = False
+
 # Setup templates
 templates = Jinja2Templates(directory="v2/templates")
 

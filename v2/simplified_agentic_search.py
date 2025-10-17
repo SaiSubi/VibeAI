@@ -19,6 +19,7 @@ from langgraph.graph import StateGraph, END
 
 # Add parent directory to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from utils.config import Gemini_API_KEY
 from search_tools import (
     embedding_song_search_tool,
