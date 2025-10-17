@@ -603,10 +603,29 @@ class VibeAIApp {
             
             if (data.success) {
                 this.renderDefaultPlaylists(data.playlists);
+            } else {
+                console.warn('Playlists API not available yet, using fallback');
+                this.renderFallbackPlaylists();
             }
         } catch (error) {
             console.error('Error loading playlists:', error);
+            console.warn('Using fallback playlists due to backend error');
+            this.renderFallbackPlaylists();
         }
+    }
+    
+    renderFallbackPlaylists() {
+        console.log('Rendering fallback playlists');
+        const container = document.getElementById('playlistButtons');
+        if (!container) return;
+        
+        container.innerHTML = `
+            <div style="color: #888; font-size: 12px; padding: 10px; text-align: center;">
+                <i class="fas fa-music"></i><br>
+                Ready-to-go playlists<br>
+                <small>Loading...</small>
+            </div>
+        `;
     }
     
     renderDefaultPlaylists(playlists) {
