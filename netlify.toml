@@ -1,5 +1,5 @@
 [build]
-  command = "echo 'V2 static files ready - no build needed'"
+  command = "echo 'V2 static files ready - no build needed' && exit 0"
   publish = "vibeai-ui/dist"
 
 [build.environment]
