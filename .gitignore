@@ -216,3 +216,4 @@ token.json
 node_modules/
 dist/
 build/
+vibeai-ui/

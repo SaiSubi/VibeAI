@@ -1,11 +1,15 @@
 [build]
-  command = "echo 'V2 static files ready for deployment - updated'"
+  command = "echo 'V2 static files ready - no build needed'"
   publish = "."
+
+[build.environment]
+  NODE_VERSION = "18"
+
+# Ensure we're not building from vibeai-ui
+[build.ignore]
+  vibeai-ui/
 
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
-
-[build.environment]
-  NODE_VERSION = "18"
