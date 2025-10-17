@@ -1,0 +1,11 @@
+# Set correct MIME types for JavaScript files
+/static/js/*
+  Content-Type: application/javascript
+
+# Set correct MIME types for CSS files  
+/static/css/*
+  Content-Type: text/css
+
+# Set correct MIME types for HTML files
+/*.html
+  Content-Type: text/html

@@ -1,9 +1,8 @@
 [build]
-  command = "echo 'V2 static files ready - no build needed'"
-  publish = "."
+  command = "echo 'V2 frontend files ready - no build needed'"
+  publish = "frontend"
 
 [build.environment]
-  SKIP_DEPENDENCY_INSTALLATION = "true"
   NODE_ENV = "production"
 
 [[redirects]]
