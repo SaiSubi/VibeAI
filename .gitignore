@@ -214,6 +214,6 @@ token.json
 
 # Frontend build and dependencies (optional, only if these exist)
 node_modules/
-dist/
+# dist/  # Temporarily commented out to allow v2 files
 build/
-vibeai-ui/
+# vibeai-ui/  # Temporarily commented out to allow v2 files
