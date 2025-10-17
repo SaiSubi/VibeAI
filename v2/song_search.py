@@ -139,10 +139,10 @@ class SongSearchEngine:
         if 'energy_range' in search_params:
             energy_range = search_params['energy_range']
             if isinstance(energy_range, list):
-                where_conditions.append("energy_level BETWEEN ? AND ?")
+                where_conditions.append("energy_level BETWEEN %s AND %s")
                 params.extend([energy_range[0], energy_range[1]])
             else:
-                where_conditions.append("energy_level >= ?")
+                where_conditions.append("energy_level >= %s")
                 params.append(energy_range)
         
         # Emotion preference
@@ -158,14 +158,14 @@ class SongSearchEngine:
         # Languages
         if 'languages' in search_params and search_params['languages']:
             languages = search_params['languages']
-            placeholders = ','.join(['?' for _ in languages])
+            placeholders = ','.join(['%s' for _ in languages])
             where_conditions.append(f"language IN ({placeholders})")
             params.extend(languages)
         
         # Genres
         if 'genres' in search_params and search_params['genres']:
             genres = search_params['genres']
-            placeholders = ','.join(['?' for _ in genres])
+            placeholders = ','.join(['%s' for _ in genres])
             where_conditions.append(f"genre IN ({placeholders})")
             params.extend(genres)
         
@@ -174,7 +174,7 @@ class SongSearchEngine:
             themes = search_params['themes']
             theme_conditions = []
             for theme in themes:
-                theme_conditions.append("lyrical_themes LIKE ?")
+                theme_conditions.append("lyrical_themes LIKE %s")
                 params.append(f"%{theme}%")
             where_conditions.append(f"({' OR '.join(theme_conditions)})")
         
@@ -182,70 +182,70 @@ class SongSearchEngine:
         if 'danceability_range' in search_params:
             dance_range = search_params['danceability_range']
             if isinstance(dance_range, list):
-                where_conditions.append("danceability_score BETWEEN ? AND ?")
+                where_conditions.append("danceability_score BETWEEN %s AND %s")
                 params.extend([dance_range[0], dance_range[1]])
             else:
-                where_conditions.append("danceability_score >= ?")
+                where_conditions.append("danceability_score >= %s")
                 params.append(dance_range)
         
         # Tempo
         if 'tempo_range' in search_params:
             tempo_range = search_params['tempo_range']
             if isinstance(tempo_range, list):
-                where_conditions.append("tempo BETWEEN ? AND ?")
+                where_conditions.append("tempo BETWEEN %s AND %s")
                 params.extend([tempo_range[0], tempo_range[1]])
             else:
-                where_conditions.append("tempo >= ?")
+                where_conditions.append("tempo >= %s")
                 params.append(tempo_range)
         
         # Melodic expressiveness
         if 'melodic_range' in search_params:
             melodic_range = search_params['melodic_range']
             if isinstance(melodic_range, list):
-                where_conditions.append("melodic_expressiveness BETWEEN ? AND ?")
+                where_conditions.append("melodic_expressiveness BETWEEN %s AND %s")
                 params.extend([melodic_range[0], melodic_range[1]])
             else:
-                where_conditions.append("melodic_expressiveness >= ?")
+                where_conditions.append("melodic_expressiveness >= %s")
                 params.append(melodic_range)
         
         # Vocal prominence
         if 'vocal_range' in search_params:
             vocal_range = search_params['vocal_range']
             if isinstance(vocal_range, list):
-                where_conditions.append("vocal_prominence BETWEEN ? AND ?")
+                where_conditions.append("vocal_prominence BETWEEN %s AND %s")
                 params.extend([vocal_range[0], vocal_range[1]])
             else:
-                where_conditions.append("vocal_prominence >= ?")
+                where_conditions.append("vocal_prominence >= %s")
                 params.append(vocal_range)
         
         # Timbre
         if 'timbre_range' in search_params:
             timbre_range = search_params['timbre_range']
             if isinstance(timbre_range, list):
-                where_conditions.append("timbre BETWEEN ? AND ?")
+                where_conditions.append("timbre BETWEEN %s AND %s")
                 params.extend([timbre_range[0], timbre_range[1]])
             else:
-                where_conditions.append("timbre >= ?")
+                where_conditions.append("timbre >= %s")
                 params.append(timbre_range)
         
         # Acousticness
         if 'acousticness_range' in search_params:
             acoustic_range = search_params['acousticness_range']
             if isinstance(acoustic_range, list):
-                where_conditions.append("acousticness BETWEEN ? AND ?")
+                where_conditions.append("acousticness BETWEEN %s AND %s")
                 params.extend([acoustic_range[0], acoustic_range[1]])
             else:
-                where_conditions.append("acousticness >= ?")
+                where_conditions.append("acousticness >= %s")
                 params.append(acoustic_range)
         
         # Popularity
         if 'popularity_range' in search_params:
             pop_range = search_params['popularity_range']
             if isinstance(pop_range, list):
-                where_conditions.append("popularity_score BETWEEN ? AND ?")
+                where_conditions.append("popularity_score BETWEEN %s AND %s")
                 params.extend([pop_range[0], pop_range[1]])
             else:
-                where_conditions.append("popularity_score >= ?")
+                where_conditions.append("popularity_score >= %s")
                 params.append(pop_range)
         
         # Artist contains
@@ -256,26 +256,26 @@ class SongSearchEngine:
                 # Multiple artists - use OR logic
                 artist_conditions = []
                 for artist in artist_value:
-                    artist_conditions.append("LOWER(artist) LIKE ?")
+                    artist_conditions.append("LOWER(artist) LIKE %s")
                     params.append(f"%{artist.lower()}%")
                 where_conditions.append(f"({' OR '.join(artist_conditions)})")
             else:
                 # Single artist
-                where_conditions.append("LOWER(artist) LIKE ?")
+                where_conditions.append("LOWER(artist) LIKE %s")
                 params.append(f"%{artist_value.lower()}%")        
         # Title contains
         if 'title_contains' in search_params and search_params['title_contains']:
-            where_conditions.append("title LIKE ?")
+            where_conditions.append("title LIKE %s")
             params.append(f"%{search_params['title_contains']}%")
         
         # Year range
         if 'year_range' in search_params:
             year_range = search_params['year_range']
             if isinstance(year_range, list):
-                where_conditions.append("release_year BETWEEN ? AND ?")
+                where_conditions.append("release_year BETWEEN %s AND %s")
                 params.extend([year_range[0], year_range[1]])
             else:
-                where_conditions.append("release_year >= ?")
+                where_conditions.append("release_year >= %s")
                 params.append(year_range)
         
         # Build the complete query
@@ -291,7 +291,7 @@ class SongSearchEngine:
             FROM songs 
             WHERE {where_clause}
             ORDER BY popularity_score DESC, energy_level DESC
-            LIMIT ?
+            LIMIT %s
         """
         
         params.append(limit)
