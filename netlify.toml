@@ -1,6 +1,6 @@
 [build]
   command = "echo 'V2 frontend files ready - no build needed'"
-  publish = "frontend"
+  publish = "."
 
 [build.environment]
   NODE_ENV = "production"
