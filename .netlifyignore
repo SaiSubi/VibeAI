@@ -1,0 +1,25 @@
+# Ignore the old React build directory
+vibeai-ui/
+
+# Ignore other build artifacts
+node_modules/
+dist/
+build/
+
+# Ignore Python files (not needed for static site)
+*.py
+*.pyc
+__pycache__/
+venv/
+env/
+
+# Ignore database files
+*.db
+*.sqlite
+
+# Ignore config files not needed for frontend
+.env
+.env.*
+requirements.txt
+Dockerfile
+cloudbuild.yaml
