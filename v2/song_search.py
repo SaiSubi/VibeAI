@@ -15,6 +15,7 @@ from datetime import datetime
 
 # Add parent directory to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from utils.config import Gemini_API_KEY, DATABASE_URL
 from vector_embeddings import VectorEmbeddingManager
 

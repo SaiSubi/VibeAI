@@ -14,6 +14,7 @@ from difflib import SequenceMatcher
 
 # Add parent directory to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from vector_embeddings import VectorEmbeddingManager
 from song_search import SongSearchEngine
 from utils.config import DATABASE_URL
