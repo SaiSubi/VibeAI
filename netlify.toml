@@ -2,6 +2,10 @@
   command = "echo 'V2 static files ready - no build needed'"
   publish = "."
 
+[build.environment]
+  SKIP_DEPENDENCY_INSTALLATION = "true"
+  NODE_ENV = "production"
+
 [[redirects]]
   from = "/*"
   to = "/index.html"
