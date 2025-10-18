@@ -1,0 +1,2 @@
+# This file ensures Netlify only processes frontend files
+# All files in this directory should be deployed
